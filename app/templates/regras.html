@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Regras · Bolão da Copa 2026{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">📋 Regras e pontuação</h1>
+
+<div class="space-y-5">
+  <section class="bg-white rounded-lg shadow p-5">
+    <h2 class="text-lg font-semibold text-emerald-800 mb-2">Palpites dos jogos</h2>
+    <ul class="text-sm space-y-1 list-disc list-inside text-slate-700">
+      <li>O bolão começa na <b>3ª rodada da fase de grupos</b>.</li>
+      <li>Você palpita o <b>placar</b> de cada jogo, editável até o <b>apito inicial</b>.</li>
+      <li>Jogos do <b>mata-mata</b> abrem quando os times do confronto são definidos.</li>
+    </ul>
+    <table class="mt-3 text-sm w-full max-w-sm">
+      <tr><td class="py-1">Placar cravado</td><td class="text-right font-semibold">10 pts</td></tr>
+      <tr><td class="py-1">Acertou o vencedor/empate <b>e</b> o saldo de gols</td><td class="text-right font-semibold">7 pts</td></tr>
+      <tr><td class="py-1">Acertou só o vencedor/empate</td><td class="text-right font-semibold">5 pts</td></tr>
+      <tr><td class="py-1">Errou</td><td class="text-right font-semibold">0 pts</td></tr>
+    </table>
+  </section>
+
+  <section class="bg-white rounded-lg shadow p-5">
+    <h2 class="text-lg font-semibold text-emerald-800 mb-2">🥇 Artilheiro da Copa</h2>
+    <p class="text-sm text-slate-700 mb-2">
+      Você escolhe o artilheiro e pode trocar quando quiser — mas a pontuação fica
+      <b>congelada conforme a fase do seu último palpite</b>. Quanto mais cedo, mais vale:
+    </p>
+    <table class="text-sm w-full max-w-sm">
+      {% for stage, pts in artilheiro_tiers.items() %}
+      <tr><td class="py-1">{{ stage_labels[stage] }}</td><td class="text-right font-semibold">{{ pts }} pts</td></tr>
+      {% endfor %}
+    </table>
+  </section>
+
+  <section class="bg-white rounded-lg shadow p-5">
+    <h2 class="text-lg font-semibold text-emerald-800 mb-2">🇧🇷 Apostas do Brasil</h2>
+    <ul class="text-sm space-y-1 list-disc list-inside text-slate-700">
+      <li>Em cada jogo do Brasil: <b>Neymar entra?</b> e <b>Endrick entra?</b> — 3 pts cada.</li>
+      <li><b>Até onde o Brasil vai?</b> Acerto exato vale 30 pts. Se ninguém cravar, quem chegar
+          mais perto leva. Editável até o início do bolão.</li>
+    </ul>
+  </section>
+</div>
+{% endblock %}

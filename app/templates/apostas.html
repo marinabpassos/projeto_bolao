@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Apostas especiais · Bolão da Copa 2026{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">Apostas especiais</h1>
+
+{% if not user %}
+  <div class="rounded-lg bg-white p-6 text-center text-slate-500 shadow">Entre com o Google para fazer suas apostas.</div>
+{% else %}
+<div class="grid md:grid-cols-2 gap-6">
+
+  <!-- Artilheiro -->
+  <section class="bg-white rounded-lg shadow p-5">
+    <h2 class="text-lg font-semibold text-emerald-800 mb-1">🥇 Artilheiro da Copa</h2>
+    <p class="text-sm text-slate-500 mb-3">
+      Vale mais quanto mais cedo você cravar. Sua aposta vale conforme a fase do
+      <b>último palpite</b>. Faixa de agora: <b class="text-emerald-700">{{ current_tier }} pts</b>.
+    </p>
+    {% if artilheiro %}
+    <p class="text-sm mb-3 rounded bg-emerald-50 px-3 py-2">
+      Palpite atual: <b>{{ artilheiro.player }}</b> · congelado em <b>{{ artilheiro.tier_points_at_edit }} pts</b>
+      {% if artilheiro.points %}· ganhou <b>{{ artilheiro.points }} pts</b>{% endif %}
+    </p>
+    {% endif %}
+    <form method="post" action="/apostas/artilheiro" class="flex flex-col gap-3">
+      <select name="player" class="border rounded py-2 px-3" required>
+        <option value="" disabled {{ 'selected' if not artilheiro }}>Escolha um jogador…</option>
+        {% for p in players %}
+        <option value="{{ p }}" {{ 'selected' if artilheiro and artilheiro.player == p }}>{{ p }}</option>
+        {% endfor %}
+      </select>
+      <button class="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700">
+        Salvar (congela em {{ current_tier }} pts)
+      </button>
+      <p class="text-xs text-amber-600">Atenção: trocar agora recalcula o valor para a faixa atual.</p>
+    </form>
+  </section>
+
+  <!-- Progresso do Brasil -->
+  <section class="bg-white rounded-lg shadow p-5">
+    <h2 class="text-lg font-semibold text-emerald-800 mb-1">🇧🇷 Até onde o Brasil vai?</h2>
+    <p class="text-sm text-slate-500 mb-3">
+      Acerto exato vale 30 pts. Se ninguém cravar, quem chegar mais perto leva.
+      {% if not progress_open %}<span class="text-red-600 font-semibold">Aposta encerrada.</span>{% endif %}
+    </p>
+    {% if brazil_progress %}
+    <p class="text-sm mb-3 rounded bg-emerald-50 px-3 py-2">
+      Palpite atual: <b>{{ phases_progress_labels[brazil_progress.phase_choice] }}</b>
+      {% if brazil_progress.points %}· ganhou <b>{{ brazil_progress.points }} pts</b>{% endif %}
+    </p>
+    {% endif %}
+    <form method="post" action="/apostas/brasil-progresso" class="flex flex-col gap-3">
+      <select name="phase_choice" class="border rounded py-2 px-3" {{ 'disabled' if not progress_open }} required>
+        <option value="" disabled {{ 'selected' if not brazil_progress }}>Escolha a fase…</option>
+        {% for ph in phases_progress %}
+        <option value="{{ ph }}" {{ 'selected' if brazil_progress and brazil_progress.phase_choice == ph }}>
+          {{ phases_progress_labels[ph] }}
+        </option>
+        {% endfor %}
+      </select>
+      {% if progress_open %}
+      <button class="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700">Salvar</button>
+      {% endif %}
+    </form>
+  </section>
+
+</div>
+{% endif %}
+{% endblock %}
