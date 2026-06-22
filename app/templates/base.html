@@ -5,55 +5,76 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Bolão da Copa 2026{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: { brand: { green: '#0a8754', yellow: '#f4c430', blue: '#1d3f8a' } },
+        fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+      } }
+    }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <style>body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}</style>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>body{font-family:'Inter',ui-sans-serif,system-ui,sans-serif}</style>
 </head>
-<body class="min-h-screen bg-gradient-to-b from-emerald-50 to-slate-100 text-slate-800">
-  <header class="bg-emerald-700 text-white shadow">
-    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-      <a href="/" class="flex items-center gap-2 font-bold text-lg">
-        <span class="text-2xl">⚽</span> Bolão da Copa 2026
+<body class="min-h-screen bg-slate-50 text-slate-800 antialiased flex flex-col">
+  <header class="sticky top-0 z-20 bg-white/90 backdrop-blur border-b border-slate-200">
+    <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+      <a href="/" class="flex items-center gap-2.5 font-semibold text-slate-900">
+        <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-brand-green/10 text-lg">⚽</span>
+        <span class="tracking-tight">Bolão da Copa<span class="text-brand-green"> 2026</span></span>
       </a>
-      <nav class="hidden sm:flex items-center gap-1 text-sm font-medium">
-        <a href="/" class="px-3 py-2 rounded hover:bg-emerald-600">Jogos</a>
-        <a href="/apostas" class="px-3 py-2 rounded hover:bg-emerald-600">Apostas</a>
-        <a href="/ranking" class="px-3 py-2 rounded hover:bg-emerald-600">Ranking</a>
-        <a href="/regras" class="px-3 py-2 rounded hover:bg-emerald-600">Regras</a>
+      <nav class="hidden sm:flex items-center gap-1 text-sm text-slate-500">
+        {% set nav = [('/', 'Jogos'), ('/apostas', 'Apostas'), ('/ranking', 'Ranking'), ('/regras', 'Regras')] %}
+        {% for href, label in nav %}
+        <a href="{{ href }}" class="px-3 py-2 rounded-md hover:text-slate-900 hover:bg-slate-100 transition">{{ label }}</a>
+        {% endfor %}
         {% if user and user.is_admin %}
-        <a href="/admin" class="px-3 py-2 rounded bg-amber-500 hover:bg-amber-400 text-white">Admin</a>
+        <a href="/admin" class="px-3 py-2 rounded-md text-brand-blue hover:bg-slate-100 transition">Admin</a>
         {% endif %}
       </nav>
       <div class="flex items-center gap-2">
         {% if user %}
           {% if user.picture_url %}
-          <img src="{{ user.picture_url }}" alt="" class="w-8 h-8 rounded-full border-2 border-white" referrerpolicy="no-referrer">
+          <img src="{{ user.picture_url }}" alt="" class="w-8 h-8 rounded-full ring-1 ring-slate-200" referrerpolicy="no-referrer">
           {% endif %}
-          <span class="hidden md:inline text-sm">{{ user.name or user.email }}</span>
-          <a href="/auth/logout" class="text-xs px-2 py-1 rounded bg-emerald-800 hover:bg-emerald-900">Sair</a>
+          <span class="hidden md:inline text-sm text-slate-600">{{ user.name or user.email }}</span>
+          <a href="/auth/logout" class="text-xs px-2.5 py-1.5 rounded-md text-slate-500 hover:bg-slate-100">Sair</a>
         {% else %}
-          <a href="/auth/login" class="text-sm px-3 py-2 rounded bg-white text-emerald-700 font-semibold hover:bg-emerald-50">Entrar com Google</a>
+          <a href="/auth/login" class="text-sm px-3.5 py-2 rounded-lg bg-brand-green text-white font-medium hover:brightness-110 transition">Entrar</a>
+          {% if dev_login %}
+          <a href="/auth/dev-login" class="text-xs px-2 py-2 rounded-md text-slate-400 hover:bg-slate-100">dev</a>
+          {% endif %}
         {% endif %}
       </div>
     </div>
-    <nav class="sm:hidden flex items-center justify-around bg-emerald-800 text-sm">
-      <a href="/" class="px-3 py-2">Jogos</a>
-      <a href="/apostas" class="px-3 py-2">Apostas</a>
-      <a href="/ranking" class="px-3 py-2">Ranking</a>
-      <a href="/regras" class="px-3 py-2">Regras</a>
-      {% if user and user.is_admin %}<a href="/admin" class="px-3 py-2 text-amber-300">Admin</a>{% endif %}
+    <!-- detalhe sutil da bandeira -->
+    <div class="h-0.5 flex">
+      <div class="flex-1 bg-brand-green"></div>
+      <div class="flex-1 bg-brand-yellow"></div>
+      <div class="flex-1 bg-brand-blue"></div>
+    </div>
+    <nav class="sm:hidden flex items-center justify-around bg-white text-sm text-slate-500 border-b border-slate-100">
+      <a href="/" class="px-3 py-2.5">Jogos</a>
+      <a href="/apostas" class="px-3 py-2.5">Apostas</a>
+      <a href="/ranking" class="px-3 py-2.5">Ranking</a>
+      <a href="/regras" class="px-3 py-2.5">Regras</a>
+      {% if user and user.is_admin %}<a href="/admin" class="px-3 py-2.5 text-brand-blue">Admin</a>{% endif %}
     </nav>
   </header>
 
-  <main class="max-w-5xl mx-auto px-4 py-6">
+  <main class="w-full max-w-4xl mx-auto px-4 py-8 flex-1">
     {% if not user %}
-    <div class="mb-6 rounded-lg bg-amber-100 border border-amber-300 text-amber-900 px-4 py-3 text-sm">
-      Você ainda não entrou. <a href="/auth/login" class="font-semibold underline">Entre com sua conta Google</a> para palpitar.
+    <div class="mb-6 rounded-xl bg-white border border-slate-200 px-4 py-3 text-sm text-slate-600 flex items-center gap-2">
+      <span class="text-base">👋</span>
+      <span><a href="/auth/login" class="font-medium text-brand-green hover:underline">Entre com o Google</a> para registrar seus palpites.</span>
     </div>
     {% endif %}
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="max-w-5xl mx-auto px-4 py-8 text-center text-xs text-slate-400">
+  <footer class="max-w-4xl mx-auto w-full px-4 py-8 text-center text-xs text-slate-400">
     Bolão entre amigos · Copa do Mundo 2026
   </footer>
 </body>

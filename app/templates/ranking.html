@@ -1,35 +1,37 @@
 {% extends "base.html" %}
 {% block title %}Ranking · Bolão da Copa 2026{% endblock %}
 {% block content %}
-<h1 class="text-2xl font-bold mb-6">🏆 Ranking</h1>
+<h1 class="text-xl font-semibold text-slate-900 tracking-tight mb-6">Ranking</h1>
 
 {% if not ranking %}
-  <div class="rounded-lg bg-white p-6 text-center text-slate-500 shadow">Ninguém pontuou ainda.</div>
+  <div class="rounded-xl bg-white border border-slate-200 p-8 text-center text-slate-400">Ninguém pontuou ainda.</div>
 {% else %}
-<div class="bg-white rounded-lg shadow overflow-hidden">
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
   <table class="w-full text-sm">
-    <thead class="bg-emerald-700 text-white">
-      <tr>
-        <th class="px-4 py-3 text-left w-12">#</th>
-        <th class="px-4 py-3 text-left">Participante</th>
-        <th class="px-4 py-3 text-right">Pontos</th>
+    <thead>
+      <tr class="text-slate-400 text-xs uppercase tracking-wider border-b border-slate-200">
+        <th class="px-4 py-3 text-left w-12 font-medium">#</th>
+        <th class="px-4 py-3 text-left font-medium">Participante</th>
+        <th class="px-4 py-3 text-right font-medium">Pontos</th>
       </tr>
     </thead>
     <tbody>
       {% for row in ranking %}
-      <tr class="border-t {{ 'bg-emerald-50' if user and row.user.id == user.id }}">
-        <td class="px-4 py-3 font-bold text-slate-400">
+      <tr class="border-b border-slate-100 last:border-0 {{ 'bg-brand-green/5' if user and row.user.id == user.id }}">
+        <td class="px-4 py-3 font-semibold text-slate-400">
           {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}
         </td>
         <td class="px-4 py-3">
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2.5">
             {% if row.user.picture_url %}
-            <img src="{{ row.user.picture_url }}" alt="" class="w-7 h-7 rounded-full" referrerpolicy="no-referrer">
+            <img src="{{ row.user.picture_url }}" alt="" class="w-7 h-7 rounded-full ring-1 ring-slate-200" referrerpolicy="no-referrer">
+            {% else %}
+            <span class="w-7 h-7 rounded-full bg-slate-100 inline-flex items-center justify-center text-slate-400 text-xs">{{ (row.user.name or row.user.email)[0]|upper }}</span>
             {% endif %}
-            <span>{{ row.user.name or row.user.email }}</span>
+            <span class="text-slate-700">{{ row.user.name or row.user.email }}</span>
           </div>
         </td>
-        <td class="px-4 py-3 text-right font-semibold">{{ row.total }}</td>
+        <td class="px-4 py-3 text-right font-semibold text-slate-900 tabular-nums">{{ row.total }}</td>
       </tr>
       {% endfor %}
     </tbody>

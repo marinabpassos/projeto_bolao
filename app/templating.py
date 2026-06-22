@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 
 from fastapi.templating import Jinja2Templates
 
+from app.config import get_settings
 from app.phases import (
     ARTILHEIRO_TIERS,
     PHASES_PROGRESS,
@@ -19,6 +20,7 @@ templates.env.globals.update(
     artilheiro_tiers=ARTILHEIRO_TIERS,
     phases_progress=PHASES_PROGRESS,
     phases_progress_labels=PHASES_PROGRESS_LABELS,
+    dev_login=get_settings().dev_login,
 )
 
 _BRT = ZoneInfo("America/Sao_Paulo")

@@ -59,6 +59,22 @@ async def callback(request: Request, db: Session = Depends(get_db)):
     return RedirectResponse(url="/", status_code=303)
 
 
+@router.get("/dev-login")
+def dev_login(request: Request, db: Session = Depends(get_db)):
+    """Login falso para testes locais (só funciona com DEV_LOGIN=true)."""
+    if not settings.dev_login:
+        raise HTTPException(status_code=404, detail="Não encontrado.")
+    email = "dev@local"
+    user = db.scalar(select(User).where(User.email == email))
+    if user is None:
+        user = User(email=email, name="Usuário Dev", is_admin=True)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    request.session["user_id"] = user.id
+    return RedirectResponse(url="/", status_code=303)
+
+
 @router.get("/logout")
 async def logout(request: Request):
     request.session.clear()

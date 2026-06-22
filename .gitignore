@@ -12,6 +12,9 @@ env/
 .env.local
 *.local
 
+# Banco local (SQLite)
+*.db
+
 # Vercel
 .vercel
 

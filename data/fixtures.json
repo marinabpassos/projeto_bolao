@@ -1,101 +1,36 @@
 [
-  {
-    "stage": "grupos",
-    "round": 3,
-    "home_team": "Brasil",
-    "away_team": "Camarões",
-    "teams_decided": true,
-    "is_brazil": true,
-    "kickoff_at": "2026-06-23T22:00:00+00:00"
-  },
-  {
-    "stage": "grupos",
-    "round": 3,
-    "home_team": "Sérvia",
-    "away_team": "Suíça",
-    "teams_decided": true,
-    "is_brazil": false,
-    "kickoff_at": "2026-06-23T22:00:00+00:00"
-  },
-  {
-    "stage": "grupos",
-    "round": 3,
-    "home_team": "Argentina",
-    "away_team": "México",
-    "teams_decided": true,
-    "is_brazil": false,
-    "kickoff_at": "2026-06-24T22:00:00+00:00"
-  },
-  {
-    "stage": "grupos",
-    "round": 3,
-    "home_team": "França",
-    "away_team": "Polônia",
-    "teams_decided": true,
-    "is_brazil": false,
-    "kickoff_at": "2026-06-25T19:00:00+00:00"
-  },
-  {
-    "stage": "grupos",
-    "round": 3,
-    "home_team": "Inglaterra",
-    "away_team": "Senegal",
-    "teams_decided": true,
-    "is_brazil": false,
-    "kickoff_at": "2026-06-26T19:00:00+00:00"
-  },
-  {
-    "stage": "16avos",
-    "round": null,
-    "home_team": "1º Grupo A",
-    "away_team": "3º Grupo C/D/E",
-    "teams_decided": false,
-    "is_brazil": false,
-    "kickoff_at": "2026-06-28T19:00:00+00:00"
-  },
-  {
-    "stage": "16avos",
-    "round": null,
-    "home_team": "1º Grupo B",
-    "away_team": "3º Grupo A/C/D",
-    "teams_decided": false,
-    "is_brazil": false,
-    "kickoff_at": "2026-06-29T19:00:00+00:00"
-  },
-  {
-    "stage": "oitavas",
-    "round": null,
-    "home_team": "Vencedor 16-avos 1",
-    "away_team": "Vencedor 16-avos 2",
-    "teams_decided": false,
-    "is_brazil": false,
-    "kickoff_at": "2026-07-04T19:00:00+00:00"
-  },
-  {
-    "stage": "quartas",
-    "round": null,
-    "home_team": "Vencedor oitavas 1",
-    "away_team": "Vencedor oitavas 2",
-    "teams_decided": false,
-    "is_brazil": false,
-    "kickoff_at": "2026-07-10T19:00:00+00:00"
-  },
-  {
-    "stage": "semi",
-    "round": null,
-    "home_team": "Vencedor quartas 1",
-    "away_team": "Vencedor quartas 2",
-    "teams_decided": false,
-    "is_brazil": false,
-    "kickoff_at": "2026-07-14T19:00:00+00:00"
-  },
-  {
-    "stage": "final",
-    "round": null,
-    "home_team": "Finalista 1",
-    "away_team": "Finalista 2",
-    "teams_decided": false,
-    "is_brazil": false,
-    "kickoff_at": "2026-07-19T19:00:00+00:00"
-  }
+  { "stage": "grupos", "round": 3, "home_team": "Suíça", "away_team": "Canadá", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-24T19:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Bósnia e Herzegovina", "away_team": "Catar", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-24T19:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Escócia", "away_team": "Brasil", "teams_decided": true, "is_brazil": true, "kickoff_at": "2026-06-24T22:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Marrocos", "away_team": "Haiti", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-24T22:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Tchéquia", "away_team": "México", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-25T01:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "África do Sul", "away_team": "Coreia do Sul", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-25T01:00:00+00:00" },
+
+  { "stage": "grupos", "round": 3, "home_team": "Equador", "away_team": "Alemanha", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-25T20:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Curaçao", "away_team": "Costa do Marfim", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-25T20:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Japão", "away_team": "Suécia", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-25T23:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Tunísia", "away_team": "Países Baixos", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-25T23:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Turquia", "away_team": "Estados Unidos", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-26T02:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Paraguai", "away_team": "Austrália", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-26T02:00:00+00:00" },
+
+  { "stage": "grupos", "round": 3, "home_team": "Noruega", "away_team": "França", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-26T19:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Senegal", "away_team": "Iraque", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-26T19:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Cabo Verde", "away_team": "Arábia Saudita", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-27T00:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Uruguai", "away_team": "Espanha", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-27T00:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Egito", "away_team": "Irã", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-27T03:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Nova Zelândia", "away_team": "Bélgica", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-27T03:00:00+00:00" },
+
+  { "stage": "grupos", "round": 3, "home_team": "Panamá", "away_team": "Inglaterra", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-27T21:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Croácia", "away_team": "Gana", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-27T21:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Colômbia", "away_team": "Portugal", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-27T23:30:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "RD Congo", "away_team": "Uzbequistão", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-27T23:30:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Argélia", "away_team": "Áustria", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-28T02:00:00+00:00" },
+  { "stage": "grupos", "round": 3, "home_team": "Jordânia", "away_team": "Argentina", "teams_decided": true, "is_brazil": false, "kickoff_at": "2026-06-28T02:00:00+00:00" },
+
+  { "stage": "16avos", "round": null, "home_team": "A definir", "away_team": "A definir", "teams_decided": false, "is_brazil": false, "kickoff_at": "2026-06-29T19:00:00+00:00" },
+  { "stage": "16avos", "round": null, "home_team": "A definir", "away_team": "A definir", "teams_decided": false, "is_brazil": false, "kickoff_at": "2026-06-30T19:00:00+00:00" },
+  { "stage": "oitavas", "round": null, "home_team": "A definir", "away_team": "A definir", "teams_decided": false, "is_brazil": false, "kickoff_at": "2026-07-04T19:00:00+00:00" },
+  { "stage": "quartas", "round": null, "home_team": "A definir", "away_team": "A definir", "teams_decided": false, "is_brazil": false, "kickoff_at": "2026-07-10T19:00:00+00:00" },
+  { "stage": "semi", "round": null, "home_team": "A definir", "away_team": "A definir", "teams_decided": false, "is_brazil": false, "kickoff_at": "2026-07-14T19:00:00+00:00" },
+  { "stage": "final", "round": null, "home_team": "A definir", "away_team": "A definir", "teams_decided": false, "is_brazil": false, "kickoff_at": "2026-07-19T19:00:00+00:00" }
 ]

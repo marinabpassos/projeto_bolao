@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     google_client_secret: str = ""
     admin_emails: str = ""
     base_url: str = "http://localhost:8000"
+    dev_login: bool = False  # libera /auth/dev-login (apenas para testes locais)
 
     @property
     def admin_email_set(self) -> set[str]:

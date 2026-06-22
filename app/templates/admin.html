@@ -1,26 +1,26 @@
 {% extends "base.html" %}
 {% block title %}Admin · Bolão da Copa 2026{% endblock %}
 {% block content %}
-<h1 class="text-2xl font-bold mb-6">⚙️ Administração</h1>
+<h1 class="text-xl font-semibold text-slate-900 tracking-tight mb-6">Administração</h1>
 
-<div class="grid md:grid-cols-2 gap-6 mb-8">
-  <section class="bg-white rounded-lg shadow p-5">
-    <h2 class="text-lg font-semibold text-emerald-800 mb-2">Importar jogos</h2>
-    <p class="text-sm text-slate-500 mb-3">Carrega a tabela de <code>data/fixtures.json</code> (só se ainda não houver jogos).</p>
+<div class="grid md:grid-cols-2 gap-4 mb-8">
+  <section class="bg-white rounded-xl border border-slate-200 p-5">
+    <h2 class="font-semibold text-slate-900 mb-2">Importar jogos</h2>
+    <p class="text-sm text-slate-500 mb-3">Carrega a tabela de <code class="text-slate-600">data/fixtures.json</code> (só se ainda não houver jogos).</p>
     <form method="post" action="/admin/seed">
-      <button class="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700">Importar tabela</button>
+      <button class="px-4 py-2 rounded-lg bg-brand-green text-white font-medium hover:brightness-110 transition">Importar tabela</button>
     </form>
   </section>
 
-  <section class="bg-white rounded-lg shadow p-5">
-    <h2 class="text-lg font-semibold text-emerald-800 mb-2">Gabaritos finais</h2>
-    <form method="post" action="/admin/gabarito" class="flex flex-col gap-3 text-sm">
+  <section class="bg-white rounded-xl border border-slate-200 p-5">
+    <h2 class="font-semibold text-slate-900 mb-2">Gabaritos finais</h2>
+    <form method="post" action="/admin/gabarito" class="flex flex-col gap-3 text-sm text-slate-600">
       <label>Artilheiro da Copa
         <input name="top_scorer" value="{{ settlement.top_scorer if settlement else '' }}"
-               class="border rounded py-1 px-2 w-full" placeholder="Nome do artilheiro">
+               class="border border-slate-300 rounded-md py-1.5 px-2 w-full mt-1 outline-none focus:border-brand-green" placeholder="Nome do artilheiro">
       </label>
       <label>Até onde o Brasil foi
-        <select name="brazil_final_phase" class="border rounded py-1 px-2 w-full">
+        <select name="brazil_final_phase" class="border border-slate-300 rounded-md py-1.5 px-2 w-full mt-1 outline-none focus:border-brand-green">
           <option value="">—</option>
           {% for ph in phases_progress %}
           <option value="{{ ph }}" {{ 'selected' if settlement and settlement.brazil_final_phase == ph }}>
@@ -29,40 +29,40 @@
           {% endfor %}
         </select>
       </label>
-      <button class="px-4 py-2 rounded bg-amber-500 text-white hover:bg-amber-600">Salvar e recalcular</button>
+      <button class="px-4 py-2 rounded-lg bg-brand-blue text-white font-medium hover:brightness-110 transition">Salvar e recalcular</button>
     </form>
   </section>
 </div>
 
-<h2 class="text-lg font-semibold text-emerald-800 mb-3">Jogos ({{ matches|length }})</h2>
-<div class="space-y-3">
+<h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5">Jogos ({{ matches|length }})</h2>
+<div class="space-y-2.5">
   {% for m in matches %}
-  <article class="bg-white rounded-lg shadow p-4">
+  <article class="bg-white rounded-xl border border-slate-200 p-4">
     <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
       <span>{{ stage_labels[m.stage] }} · {{ m.kickoff_at | dt_br }}</span>
       <span>{% if m.finished %}encerrado{% elif m.teams_decided %}aberto{% else %}a definir{% endif %}</span>
     </div>
 
     <form method="post" action="/admin/match/{{ m.id }}/teams" class="flex flex-wrap items-center gap-2 text-sm mb-2">
-      <input name="home_team" value="{{ m.home_team }}" class="border rounded py-1 px-2 w-40">
-      <span class="text-slate-400">×</span>
-      <input name="away_team" value="{{ m.away_team }}" class="border rounded py-1 px-2 w-40">
-      <label class="flex items-center gap-1 text-xs">
+      <input name="home_team" value="{{ m.home_team }}" class="border border-slate-300 rounded-md py-1.5 px-2 w-40 outline-none focus:border-brand-green">
+      <span class="text-slate-300">vs</span>
+      <input name="away_team" value="{{ m.away_team }}" class="border border-slate-300 rounded-md py-1.5 px-2 w-40 outline-none focus:border-brand-green">
+      <label class="flex items-center gap-1 text-xs text-slate-500">
         <input type="checkbox" name="teams_decided" {{ 'checked' if m.teams_decided }}> times definidos
       </label>
-      <button class="px-3 py-1 rounded bg-slate-700 text-white text-xs hover:bg-slate-800">Salvar times</button>
+      <button class="px-3 py-1.5 rounded-md bg-slate-700 text-white text-xs hover:bg-slate-800 transition">Salvar times</button>
     </form>
 
     <form method="post" action="/admin/match/{{ m.id }}/resultado" class="flex flex-wrap items-center gap-2 text-sm">
-      <span class="text-xs text-slate-500">Resultado:</span>
-      <input type="number" name="home_score" min="0" value="{{ m.home_score if m.home_score is not none else '' }}" class="border rounded py-1 w-16 text-center">
-      <span class="text-slate-400">×</span>
-      <input type="number" name="away_score" min="0" value="{{ m.away_score if m.away_score is not none else '' }}" class="border rounded py-1 w-16 text-center">
+      <span class="text-xs text-slate-400">Resultado:</span>
+      <input type="number" name="home_score" min="0" value="{{ m.home_score if m.home_score is not none else '' }}" class="border border-slate-300 rounded-md py-1.5 w-14 text-center outline-none focus:border-brand-green">
+      <span class="text-slate-300">:</span>
+      <input type="number" name="away_score" min="0" value="{{ m.away_score if m.away_score is not none else '' }}" class="border border-slate-300 rounded-md py-1.5 w-14 text-center outline-none focus:border-brand-green">
       {% if m.is_brazil %}
-      <label class="flex items-center gap-1 text-xs"><input type="checkbox" name="neymar_played" {{ 'checked' if m.neymar_played }}> Neymar entrou</label>
-      <label class="flex items-center gap-1 text-xs"><input type="checkbox" name="endrick_played" {{ 'checked' if m.endrick_played }}> Endrick entrou</label>
+      <label class="flex items-center gap-1 text-xs text-slate-500"><input type="checkbox" name="neymar_played" {{ 'checked' if m.neymar_played }}> Neymar entrou</label>
+      <label class="flex items-center gap-1 text-xs text-slate-500"><input type="checkbox" name="endrick_played" {{ 'checked' if m.endrick_played }}> Endrick entrou</label>
       {% endif %}
-      <button class="px-3 py-1 rounded bg-emerald-600 text-white text-xs hover:bg-emerald-700">Lançar resultado</button>
+      <button class="px-3 py-1.5 rounded-md bg-brand-green text-white text-xs font-medium hover:brightness-110 transition">Lançar resultado</button>
     </form>
   </article>
   {% endfor %}

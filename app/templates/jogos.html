@@ -1,56 +1,56 @@
 {% extends "base.html" %}
 {% block title %}Jogos · Bolão da Copa 2026{% endblock %}
 {% block content %}
-<h1 class="text-2xl font-bold mb-1">Palpites dos jogos</h1>
-<p class="text-sm text-slate-500 mb-6">A partir da 3ª rodada da fase de grupos. Editável até o apito de cada jogo.</p>
+<h1 class="text-xl font-semibold text-slate-900 tracking-tight">Jogos</h1>
+<p class="text-sm text-slate-500 mb-6">A partir da 3ª rodada da fase de grupos · editável até o apito.</p>
 
 {% if not groups %}
-  <div class="rounded-lg bg-white p-6 text-center text-slate-500 shadow">
+  <div class="rounded-xl bg-white border border-slate-200 p-8 text-center text-slate-400">
     Os jogos ainda não foram cadastrados.
   </div>
 {% endif %}
 
 {% for stage, matches in groups %}
-<section class="mb-8">
-  <h2 class="text-lg font-semibold text-emerald-800 mb-3">{{ stage_labels[stage] }}</h2>
-  <div class="grid gap-3">
+<section class="mb-7">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5">{{ stage_labels[stage] }}</h2>
+  <div class="grid gap-2.5">
     {% for m in matches %}
     {% set pred = my_preds.get(m.id) %}
     {% set br = my_br.get(m.id) %}
-    <article id="jogo-{{ m.id }}" class="bg-white rounded-lg shadow p-4">
-      <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
-        <span>{{ m.kickoff_at | dt_br }}</span>
-        {% if m.finished %}<span class="text-emerald-600 font-semibold">Encerrado</span>
-        {% elif is_open[m.id] %}<span class="text-amber-600 font-semibold">Aberto</span>
-        {% else %}<span>Fechado</span>{% endif %}
+    <article id="jogo-{{ m.id }}" class="bg-white rounded-xl border border-slate-200 p-4 hover:border-slate-300 transition">
+      <div class="flex items-center justify-between text-xs mb-2.5">
+        <span class="text-slate-400">{{ m.kickoff_at | dt_br }}</span>
+        {% if m.finished %}<span class="font-medium text-brand-green">Encerrado</span>
+        {% elif is_open[m.id] %}<span class="inline-flex items-center gap-1 font-medium text-slate-500"><span class="h-1.5 w-1.5 rounded-full bg-brand-green"></span>Aberto</span>
+        {% else %}<span class="text-slate-300">Fechado</span>{% endif %}
       </div>
 
       {% if not m.teams_decided %}
-        <div class="text-center text-slate-500 py-2">⏳ Aguardando definição dos times deste confronto</div>
+        <div class="text-center text-sm text-slate-400 py-2">⏳ Aguardando definição dos times</div>
       {% else %}
-        <div class="flex items-center justify-center gap-3 text-lg font-semibold mb-1">
-          <span class="flex-1 text-right">{{ m.home_team }}</span>
+        <div class="flex items-center justify-center gap-3 text-base font-medium text-slate-800 mb-1">
+          <span class="flex-1 text-right">{% if m.is_brazil %}<span class="text-brand-yellow">★</span> {% endif %}{{ m.home_team }}</span>
           {% if m.finished %}
-            <span class="px-3 py-1 rounded bg-slate-800 text-white">{{ m.home_score }} × {{ m.away_score }}</span>
+            <span class="px-2.5 py-1 rounded-md bg-slate-900 text-white text-sm tabular-nums">{{ m.home_score }} : {{ m.away_score }}</span>
           {% else %}
-            <span class="text-slate-300">×</span>
+            <span class="text-slate-300 text-sm">vs</span>
           {% endif %}
-          <span class="flex-1 text-left">{{ m.away_team }}</span>
+          <span class="flex-1 text-left">{{ m.away_team }}{% if m.is_brazil %} <span class="text-brand-yellow">★</span>{% endif %}</span>
         </div>
 
         {% if user and is_open[m.id] %}
           <form method="post" action="/palpite/{{ m.id }}" class="flex items-center justify-center gap-2 mt-3">
             <input type="number" name="home_pred" min="0" value="{{ pred.home_pred if pred else '' }}"
-                   class="w-16 text-center border rounded py-1" required>
-            <span class="text-slate-400">×</span>
+                   class="w-14 text-center border border-slate-300 rounded-md py-1.5 focus:border-brand-green focus:ring-1 focus:ring-brand-green outline-none" required>
+            <span class="text-slate-300">:</span>
             <input type="number" name="away_pred" min="0" value="{{ pred.away_pred if pred else '' }}"
-                   class="w-16 text-center border rounded py-1" required>
-            <button class="ml-2 px-3 py-1 rounded bg-emerald-600 text-white text-sm hover:bg-emerald-700">Salvar</button>
+                   class="w-14 text-center border border-slate-300 rounded-md py-1.5 focus:border-brand-green focus:ring-1 focus:ring-brand-green outline-none" required>
+            <button class="ml-2 px-3.5 py-1.5 rounded-md bg-brand-green text-white text-sm font-medium hover:brightness-110 transition">Salvar</button>
           </form>
         {% elif pred %}
           <p class="text-center text-sm text-slate-500 mt-2">
-            Seu palpite: <b>{{ pred.home_pred }} × {{ pred.away_pred }}</b>
-            {% if m.finished %}— <span class="text-emerald-700 font-semibold">{{ pred.points }} pts</span>{% endif %}
+            Seu palpite: <b class="text-slate-700">{{ pred.home_pred }} : {{ pred.away_pred }}</b>
+            {% if m.finished %}· <span class="font-semibold text-brand-green">{{ pred.points }} pts</span>{% endif %}
           </p>
         {% elif not user %}
           <p class="text-center text-xs text-slate-400 mt-2">Entre para palpitar.</p>
@@ -59,29 +59,29 @@
         {% endif %}
 
         {% if m.is_brazil %}
-        <div class="mt-3 pt-3 border-t border-dashed">
-          <p class="text-xs font-semibold text-amber-700 mb-2 text-center">🇧🇷 Apostas do jogo do Brasil (3 pts cada)</p>
+        <div class="mt-3 pt-3 border-t border-dashed border-slate-200">
+          <p class="text-xs font-medium text-slate-500 mb-2 text-center">Apostas do jogo do Brasil · 3 pts cada</p>
           {% if user and is_open[m.id] %}
-          <form method="post" action="/apostas/brasil-jogo/{{ m.id }}" class="flex flex-wrap items-center justify-center gap-4 text-sm">
-            <label class="flex items-center gap-1">Neymar entra?
-              <select name="neymar_in" class="border rounded py-1">
+          <form method="post" action="/apostas/brasil-jogo/{{ m.id }}" class="flex flex-wrap items-center justify-center gap-3 text-sm">
+            <label class="flex items-center gap-1.5 text-slate-600">Neymar entra?
+              <select name="neymar_in" class="border border-slate-300 rounded-md py-1.5 px-2 outline-none focus:border-brand-green">
                 <option value="sim" {{ 'selected' if br and br.neymar_in }}>Sim</option>
                 <option value="nao" {{ 'selected' if br and not br.neymar_in }}>Não</option>
               </select>
             </label>
-            <label class="flex items-center gap-1">Endrick entra?
-              <select name="endrick_in" class="border rounded py-1">
+            <label class="flex items-center gap-1.5 text-slate-600">Endrick entra?
+              <select name="endrick_in" class="border border-slate-300 rounded-md py-1.5 px-2 outline-none focus:border-brand-green">
                 <option value="sim" {{ 'selected' if br and br.endrick_in }}>Sim</option>
                 <option value="nao" {{ 'selected' if br and not br.endrick_in }}>Não</option>
               </select>
             </label>
-            <button class="px-3 py-1 rounded bg-amber-500 text-white hover:bg-amber-600">Salvar</button>
+            <button class="px-3.5 py-1.5 rounded-md bg-brand-blue text-white text-sm font-medium hover:brightness-110 transition">Salvar</button>
           </form>
           {% elif br %}
           <p class="text-center text-sm text-slate-500">
             Neymar: <b>{{ 'Sim' if br.neymar_in else 'Não' }}</b> ·
             Endrick: <b>{{ 'Sim' if br.endrick_in else 'Não' }}</b>
-            {% if m.finished %}— <span class="text-emerald-700 font-semibold">{{ br.points }} pts</span>{% endif %}
+            {% if m.finished %}· <span class="font-semibold text-brand-green">{{ br.points }} pts</span>{% endif %}
           </p>
           {% endif %}
           {% if m.finished and m.neymar_played is not none %}
