@@ -71,11 +71,16 @@ def home(request: Request, user: User | None = Depends(get_current_user), db: Se
 @router.get("/ranking")
 def ranking(request: Request, user: User | None = Depends(get_current_user), db: Session = Depends(get_db)):
     rows = compute_ranking(db)
+    pos = 1
+    for i, row in enumerate(rows):
+        if i > 0 and rows[i]["total"] < rows[i - 1]["total"]:
+            pos = i + 1
+        row["pos"] = pos
     my_row, my_pos = None, None
     if user:
-        for i, r in enumerate(rows, 1):
+        for r in rows:
             if r["user"].id == user.id:
-                my_row, my_pos = r, i
+                my_row, my_pos = r, r["pos"]
                 break
     return templates.TemplateResponse(
         "ranking.html",

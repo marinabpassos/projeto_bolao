@@ -49,7 +49,7 @@
       {% for row in ranking %}
       <tr class="border-b border-slate-100 last:border-0 {{ 'bg-brand-green/5' if user and row.user.id == user.id }}">
         <td class="px-4 py-3 font-semibold text-slate-400">
-          {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}
+          {% if row.pos == 1 %}🥇{% elif row.pos == 2 %}🥈{% elif row.pos == 3 %}🥉{% else %}{{ row.pos }}{% endif %}
         </td>
         <td class="px-4 py-3">
           <div class="flex items-center gap-2.5">
