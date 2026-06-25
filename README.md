@@ -97,6 +97,20 @@ Formato de cada jogo em `fixtures.json`:
 }
 ```
 
+## Sugestões e melhorias
+
+Tem uma ideia ou encontrou algum problema? Abre uma issue no repositório:
+
+👉 **[github.com/marinabpassos/projeto_bolao/issues](https://github.com/marinabpassos/projeto_bolao/issues)**
+
+**Como abrir uma issue:**
+1. Clique em **"New issue"**
+2. Escolha um título descritivo (ex: "Adicionar placar ao vivo" ou "Bug: palpite não salva")
+3. Descreva a sugestão ou o problema com o máximo de detalhe que puder
+4. Clique em **"Submit new issue"**
+
+Pull requests também são bem-vindos! Fork o projeto, faça suas alterações e abra um PR.
+
 ## Administração
 
 Quem estiver em `ADMIN_EMAILS` vê o menu **Admin** para: importar jogos, definir os
