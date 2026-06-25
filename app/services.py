@@ -69,11 +69,14 @@ def current_artilheiro_tier(db: Session, now: datetime | None = None) -> int:
     return ARTILHEIRO_TIERS[current_artilheiro_phase(db, now)]
 
 
-def brazil_progress_deadline(db: Session) -> datetime | None:
-    """Fecha no apito do primeiro jogo do Brasil com times definidos."""
+def brazil_progress_deadline(db: Session, now: datetime | None = None) -> datetime | None:
+    """Fecha no apito do próximo jogo do Brasil com times definidos."""
+    now = now or now_utc()
     dt = db.scalar(
         select(func.min(Match.kickoff_at)).where(
-            Match.is_brazil == True, Match.teams_decided == True  # noqa: E712
+            Match.is_brazil == True,  # noqa: E712
+            Match.teams_decided == True,  # noqa: E712
+            Match.kickoff_at > now,
         )
     )
     return _aware(dt) if dt else None
@@ -81,7 +84,7 @@ def brazil_progress_deadline(db: Session) -> datetime | None:
 
 def brazil_progress_is_open(db: Session, now: datetime | None = None) -> bool:
     now = now or now_utc()
-    deadline = brazil_progress_deadline(db)
+    deadline = brazil_progress_deadline(db, now)
     return deadline is None or now < deadline
 
 
