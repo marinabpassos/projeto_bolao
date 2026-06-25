@@ -3,6 +3,10 @@
 {% block content %}
 <h1 class="text-xl font-semibold text-slate-900 tracking-tight mb-6">Palpites especiais</h1>
 
+{% if saved %}
+<div class="mb-4 rounded-lg bg-brand-green/10 border border-brand-green/30 px-4 py-2.5 text-sm text-brand-green font-medium">✓ Aposta salva com sucesso!</div>
+{% endif %}
+
 {% if not user %}
   <div class="rounded-xl bg-white border border-slate-200 p-8 text-center text-slate-400">Entre com o Google para fazer seus palpites.</div>
 {% else %}

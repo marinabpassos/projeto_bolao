@@ -70,9 +70,11 @@ def current_artilheiro_tier(db: Session, now: datetime | None = None) -> int:
 
 
 def brazil_progress_deadline(db: Session) -> datetime | None:
-    """Início do bolão = apito do primeiro jogo da 3ª rodada de grupos."""
+    """Fecha no apito do primeiro jogo do Brasil com times definidos."""
     dt = db.scalar(
-        select(func.min(Match.kickoff_at)).where(Match.stage == "grupos", Match.round == 3)
+        select(func.min(Match.kickoff_at)).where(
+            Match.is_brazil == True, Match.teams_decided == True  # noqa: E712
+        )
     )
     return _aware(dt) if dt else None
 
@@ -146,12 +148,17 @@ def compute_ranking(db: Session) -> list[dict]:
 
     ranking = []
     for user in db.scalars(select(User)):
-        total = (
-            by_match.get(user.id, 0)
-            + by_brmatch.get(user.id, 0)
-            + by_artilheiro.get(user.id, 0)
-            + by_progress.get(user.id, 0)
-        )
-        ranking.append({"user": user, "total": total})
+        pts_jogos = by_match.get(user.id, 0)
+        pts_brasil_jogo = by_brmatch.get(user.id, 0)
+        pts_artilheiro = by_artilheiro.get(user.id, 0)
+        pts_progresso = by_progress.get(user.id, 0)
+        ranking.append({
+            "user": user,
+            "total": pts_jogos + pts_brasil_jogo + pts_artilheiro + pts_progresso,
+            "pts_jogos": pts_jogos,
+            "pts_brasil_jogo": pts_brasil_jogo,
+            "pts_artilheiro": pts_artilheiro,
+            "pts_progresso": pts_progresso,
+        })
     ranking.sort(key=lambda r: (-r["total"], r["user"].name.casefold()))
     return ranking

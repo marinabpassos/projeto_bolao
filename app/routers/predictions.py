@@ -40,4 +40,4 @@ def save_prediction(
     pred.home_pred = home_pred
     pred.away_pred = away_pred
     db.commit()
-    return RedirectResponse(url="/#jogo-" + str(match_id), status_code=303)
+    return RedirectResponse(url=f"/?saved={match_id}#jogo-{match_id}", status_code=303)

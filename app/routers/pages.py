@@ -63,15 +63,23 @@ def home(request: Request, user: User | None = Depends(get_current_user), db: Se
             "my_preds": my_preds,
             "my_br": my_br,
             "is_open": {m.id: match_is_open(m, now) for m in matches},
+            "saved": request.query_params.get("saved"),
         },
     )
 
 
 @router.get("/ranking")
 def ranking(request: Request, user: User | None = Depends(get_current_user), db: Session = Depends(get_db)):
+    rows = compute_ranking(db)
+    my_row, my_pos = None, None
+    if user:
+        for i, r in enumerate(rows, 1):
+            if r["user"].id == user.id:
+                my_row, my_pos = r, i
+                break
     return templates.TemplateResponse(
         "ranking.html",
-        {"request": request, "user": user, "ranking": compute_ranking(db)},
+        {"request": request, "user": user, "ranking": rows, "my_row": my_row, "my_pos": my_pos},
     )
 
 
@@ -100,5 +108,6 @@ def apostas(request: Request, user: User | None = Depends(get_current_user), db:
             "players": load_players(),
             "current_tier": current_artilheiro_tier(db),
             "progress_open": brazil_progress_is_open(db),
+            "saved": request.query_params.get("saved"),
         },
     )

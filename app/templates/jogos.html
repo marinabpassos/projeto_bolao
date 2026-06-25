@@ -18,6 +18,9 @@
     {% set pred = my_preds.get(m.id) %}
     {% set br = my_br.get(m.id) %}
     <article id="jogo-{{ m.id }}" class="bg-white rounded-xl border border-slate-200 p-4 hover:border-slate-300 transition">
+      {% if saved == m.id|string or saved == 'brasil-' ~ m.id|string %}
+      <div class="mb-2.5 rounded-md bg-brand-green/10 border border-brand-green/30 px-3 py-1.5 text-sm text-brand-green font-medium text-center">✓ Palpite salvo!</div>
+      {% endif %}
       <div class="flex items-center justify-between text-xs mb-2.5">
         <span class="text-slate-400">{{ m.kickoff_at | dt_br }}</span>
         {% if m.finished %}<span class="font-medium text-brand-green">Encerrado</span>

@@ -43,7 +43,7 @@ def save_artilheiro(
     ap.player = player
     ap.tier_points_at_edit = tier
     db.commit()
-    return RedirectResponse(url="/apostas", status_code=303)
+    return RedirectResponse(url="/apostas?saved=artilheiro", status_code=303)
 
 
 @router.post("/brasil-progresso")
@@ -64,7 +64,7 @@ def save_brazil_progress(
         db.add(bpp)
     bpp.phase_choice = phase_choice
     db.commit()
-    return RedirectResponse(url="/apostas", status_code=303)
+    return RedirectResponse(url="/apostas?saved=brasil-progresso", status_code=303)
 
 
 @router.post("/brasil-jogo/{match_id}")
@@ -93,4 +93,4 @@ def save_brazil_match(
     bp.neymar_in = neymar_in == "sim"
     bp.endrick_in = endrick_in == "sim"
     db.commit()
-    return RedirectResponse(url="/#jogo-" + str(match_id), status_code=303)
+    return RedirectResponse(url=f"/?saved=brasil-{match_id}#jogo-{match_id}", status_code=303)
