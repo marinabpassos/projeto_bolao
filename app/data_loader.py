@@ -1,20 +1,17 @@
-"""Leitura dos arquivos de seed (jogos e jogadores)."""
+"""Acesso aos dados de seed (jogadores e jogos).
 
-import json
-from pathlib import Path
+Os dados ficam embutidos em `app/seed_data.py` para que o bundle serverless da
+Vercel os inclua automaticamente (via import), sem depender de `includeFiles`.
+Para atualizar a tabela, edite `app/seed_data.py` (ou regenere a partir de um
+JSON com o script de import).
+"""
 
-DATA_DIR = Path(__file__).parent.parent / "data"
+from app.seed_data import FIXTURES, PLAYERS
 
 
 def load_players() -> list[str]:
-    path = DATA_DIR / "players.json"
-    if not path.exists():
-        return []
-    return json.loads(path.read_text(encoding="utf-8"))
+    return list(PLAYERS)
 
 
 def load_fixtures() -> list[dict]:
-    path = DATA_DIR / "fixtures.json"
-    if not path.exists():
-        return []
-    return json.loads(path.read_text(encoding="utf-8"))
+    return list(FIXTURES)

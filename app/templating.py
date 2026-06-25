@@ -1,10 +1,14 @@
-"""Instância compartilhada do Jinja2Templates com helpers globais."""
+"""Instância compartilhada do Jinja2Templates com helpers globais.
+
+Os templates são carregados de `app/templates_data.py` (embutidos em Python) via
+DictLoader, para que o bundle serverless da Vercel não dependa de includeFiles.
+"""
 
 from datetime import timezone
-from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from fastapi.templating import Jinja2Templates
+from jinja2 import DictLoader, Environment, select_autoescape
 
 from app.config import get_settings
 from app.phases import (
@@ -12,10 +16,13 @@ from app.phases import (
     PHASES_PROGRESS,
     PHASES_PROGRESS_LABELS,
 )
+from app.templates_data import TEMPLATES
 
-TEMPLATES_DIR = Path(__file__).parent / "templates"
-
-templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+_env = Environment(
+    loader=DictLoader(TEMPLATES),
+    autoescape=select_autoescape(["html", "xml"]),
+)
+templates = Jinja2Templates(env=_env)
 templates.env.globals.update(
     artilheiro_tiers=ARTILHEIRO_TIERS,
     phases_progress=PHASES_PROGRESS,

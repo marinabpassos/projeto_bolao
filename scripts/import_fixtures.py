@@ -23,7 +23,7 @@ from pathlib import Path
 import httpx
 
 ROOT = Path(__file__).parent.parent
-OUT = ROOT / "data" / "fixtures.json"
+OUT = ROOT / "app" / "data" / "fixtures.json"
 
 # Código da competição "FIFA World Cup" na football-data.org.
 COMPETITION = os.environ.get("FOOTBALL_DATA_COMP", "WC")
@@ -76,7 +76,11 @@ def main() -> None:
         )
 
     OUT.write_text(json.dumps(fixtures, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"OK: {len(fixtures)} jogos escritos em {OUT}. Revise e rode scripts/seed.py.")
+    print(
+        f"OK: {len(fixtures)} jogos escritos em {OUT}.\n"
+        "Agora rode: python scripts/build_assets.py (para embutir) e depois "
+        "python scripts/seed.py."
+    )
 
 
 if __name__ == "__main__":
