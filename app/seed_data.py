@@ -1,8 +1,7 @@
-"""Dados de seed embutidos (jogadores e tabela de jogos).
+"""Dados de seed embutidos (gerados de app/data/*.json).
 
-Embutido em Python (em vez de JSON) para ser incluido automaticamente no
-bundle serverless da Vercel sem depender de includeFiles. Para atualizar a
-tabela, edite este arquivo.
+NÃO edite à mão — rode scripts/build_assets.py após mudar os .json.
+Embutidos para o bundle serverless da Vercel (sem includeFiles).
 """
 
 PLAYERS = ['Kylian Mbappé',

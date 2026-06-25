@@ -1,7 +1,7 @@
 """Templates HTML embutidos (gerados de app/templates/*.html).
 
-Embutidos em Python para serem incluidos no bundle serverless da Vercel sem
-depender de includeFiles. Ao editar os .html, regenere com scripts/build_templates.py.
+NÃO edite à mão — rode scripts/build_assets.py após mudar os .html.
+Embutidos para o bundle serverless da Vercel (sem includeFiles).
 """
 
 TEMPLATES = {
