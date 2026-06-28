@@ -58,21 +58,51 @@
               <button class="ml-2 px-3.5 py-1.5 rounded-md bg-brand-green text-white text-sm font-medium hover:brightness-110 transition">{% if pred %}Atualizar{% else %}Salvar{% endif %}</button>
             </div>
             {% if m.stage != 'grupos' %}
-            <div class="w-full mt-2">
+            <div id="qualifier-{{ m.id }}"
+                 class="w-full mt-2"
+                 {% set already_tied = pred and pred.home_pred == pred.away_pred and pred.qualifier_pred %}
+                 style="{{ '' if already_tied else 'display:none' }}">
               <p class="text-xs text-slate-400 mb-1.5 text-center">Em caso de empate, quem avança? <span class="font-medium text-brand-green">+5 pts</span></p>
               <div class="flex justify-center gap-6 text-sm">
                 <label class="flex items-center gap-1.5 cursor-pointer">
-                  <input type="radio" name="qualifier_pred" value="home" required
-                         {{ 'checked' if pred and pred.qualifier_pred == 'home' }}>
+                  <input type="radio" name="qualifier_pred" value="home"
+                         {{ 'checked' if pred and pred.qualifier_pred == 'home' }}
+                         {{ 'required' if already_tied }}>
                   <span class="text-slate-700">{{ m.home_team }}</span>
                 </label>
                 <label class="flex items-center gap-1.5 cursor-pointer">
-                  <input type="radio" name="qualifier_pred" value="away" required
-                         {{ 'checked' if pred and pred.qualifier_pred == 'away' }}>
+                  <input type="radio" name="qualifier_pred" value="away"
+                         {{ 'checked' if pred and pred.qualifier_pred == 'away' }}
+                         {{ 'required' if already_tied }}>
                   <span class="text-slate-700">{{ m.away_team }}</span>
                 </label>
               </div>
             </div>
+            <script>
+            (function() {
+              var form   = document.currentScript.closest('form');
+              var div    = document.getElementById('qualifier-{{ m.id }}');
+              var homeIn = form.querySelector('[name="home_pred"]');
+              var awayIn = form.querySelector('[name="away_pred"]');
+              var radios = div.querySelectorAll('input[type="radio"]');
+
+              function update() {
+                var h = homeIn.value.trim();
+                var a = awayIn.value.trim();
+                var isTie = h !== '' && a !== '' && h === a;
+                div.style.display = isTie ? '' : 'none';
+                radios.forEach(function(r) {
+                  r.disabled = !isTie;
+                  r.required = isTie;
+                  if (!isTie) r.checked = false;
+                });
+              }
+
+              homeIn.addEventListener('input', update);
+              awayIn.addEventListener('input', update);
+              update();
+            })();
+            </script>
             {% endif %}
           </form>
         {% elif pred %}
