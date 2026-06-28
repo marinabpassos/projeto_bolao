@@ -58,9 +58,9 @@
               <button class="ml-2 px-3.5 py-1.5 rounded-md bg-brand-green text-white text-sm font-medium hover:brightness-110 transition">{% if pred %}Atualizar{% else %}Salvar{% endif %}</button>
             </div>
             {% if m.stage != 'grupos' %}
+            {% set already_tied = pred and pred.home_pred == pred.away_pred and pred.qualifier_pred %}
             <div id="qualifier-{{ m.id }}"
                  class="w-full mt-2"
-                 {% set already_tied = pred and pred.home_pred == pred.away_pred and pred.qualifier_pred %}
                  style="{{ '' if already_tied else 'display:none' }}">
               <p class="text-xs text-slate-400 mb-1.5 text-center">Em caso de empate, quem avança? <span class="font-medium text-brand-green">+5 pts</span></p>
               <div class="flex justify-center gap-6 text-sm">
