@@ -2,7 +2,9 @@
 
 from datetime import datetime, timezone
 
+import httpx
 import pytest
+import respx
 from sqlalchemy import create_engine, select, func
 from sqlalchemy.orm import Session
 
@@ -86,10 +88,7 @@ class TestSeedMissingMatches:
         seed_missing_matches(db)
         count2 = seed_missing_matches(db)
         assert count2 == 0
-
-
-import httpx
-import respx
+        assert db.scalar(select(func.count()).select_from(Match)) == 3
 
 
 FAKE_API_RESPONSE = {
@@ -166,3 +165,34 @@ class TestSyncResultsFromApi:
 
         count = sync_results_from_api(db, token="fake-token")
         assert count == 0
+
+    def test_popula_who_advanced_nos_penaltis(self, db, respx_mock):
+        response_with_winner = {
+            "matches": [
+                {
+                    "stage": "LAST_32",
+                    "utcDate": "2026-06-29T19:00:00Z",
+                    "status": "FINISHED",
+                    "homeTeam": {"name": "Germany"},
+                    "awayTeam": {"name": "Morocco"},
+                    "score": {
+                        "fullTime": {"home": 1, "away": 1},
+                        "winner": "HOME_TEAM",
+                    },
+                }
+            ]
+        }
+        respx_mock.get("https://api.football-data.org/v4/competitions/WC/matches").mock(
+            return_value=httpx.Response(200, json=response_with_winner)
+        )
+        m = _match("16avos", "2026-06-29T19:00:00+00:00", "Germany", "Morocco")
+        m.teams_decided = True
+        db.add(m)
+        db.commit()
+
+        sync_results_from_api(db, token="fake-token")
+
+        db.refresh(m)
+        assert m.who_advanced == "home"
+        assert m.home_score == 1
+        assert m.away_score == 1

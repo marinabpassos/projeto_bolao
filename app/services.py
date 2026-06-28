@@ -238,7 +238,8 @@ def sync_results_from_api(db: Session, token: str) -> int:
         if not stage:
             continue
 
-        score = (m.get("score") or {}).get("fullTime") or {}
+        score_block = m.get("score") or {}
+        score = score_block.get("regularTime") or score_block.get("fullTime") or {}
         home_score = score.get("home")
         away_score = score.get("away")
         if home_score is None or away_score is None:
@@ -251,8 +252,8 @@ def sync_results_from_api(db: Session, token: str) -> int:
         local = db.scalar(
             select(Match).where(
                 Match.stage == stage,
-                Match.kickoff_at >= window_start.replace(tzinfo=None),
-                Match.kickoff_at <= window_end.replace(tzinfo=None),
+                Match.kickoff_at >= window_start,
+                Match.kickoff_at <= window_end,
             )
         )
         if local is None or local.finished:

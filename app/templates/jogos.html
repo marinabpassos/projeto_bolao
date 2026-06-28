@@ -62,12 +62,12 @@
               <p class="text-xs text-slate-400 mb-1.5 text-center">Em caso de empate, quem avança? <span class="font-medium text-brand-green">+5 pts</span></p>
               <div class="flex justify-center gap-6 text-sm">
                 <label class="flex items-center gap-1.5 cursor-pointer">
-                  <input type="radio" name="qualifier_pred" value="home"
+                  <input type="radio" name="qualifier_pred" value="home" required
                          {{ 'checked' if pred and pred.qualifier_pred == 'home' }}>
                   <span class="text-slate-700">{{ m.home_team }}</span>
                 </label>
                 <label class="flex items-center gap-1.5 cursor-pointer">
-                  <input type="radio" name="qualifier_pred" value="away"
+                  <input type="radio" name="qualifier_pred" value="away" required
                          {{ 'checked' if pred and pred.qualifier_pred == 'away' }}>
                   <span class="text-slate-700">{{ m.away_team }}</span>
                 </label>

@@ -50,7 +50,10 @@ def run_sync_resultados(user: User = Depends(require_admin), db: Session = Depen
     token = os.environ.get("FOOTBALL_DATA_TOKEN", "")
     if not token:
         raise HTTPException(status_code=500, detail="FOOTBALL_DATA_TOKEN não configurado.")
-    sync_results_from_api(db, token)
+    try:
+        sync_results_from_api(db, token)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Erro na API: {exc}") from exc
     return RedirectResponse(url="/admin", status_code=303)
 
 
