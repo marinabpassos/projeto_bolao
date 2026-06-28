@@ -13,6 +13,14 @@
   </section>
 
   <section class="bg-white rounded-xl border border-slate-200 p-5">
+    <h2 class="font-semibold text-slate-900 mb-2">Importar jogos faltando</h2>
+    <p class="text-sm text-slate-500 mb-3">Adiciona ao banco os jogos de <code class="text-slate-600">fixtures.json</code> que ainda não existem (seguro de rodar várias vezes).</p>
+    <form method="post" action="/admin/seed-missing">
+      <button class="px-4 py-2 rounded-lg bg-slate-700 text-white font-medium hover:brightness-110 transition">Importar faltando</button>
+    </form>
+  </section>
+
+  <section class="bg-white rounded-xl border border-slate-200 p-5">
     <h2 class="font-semibold text-slate-900 mb-2">Gabaritos finais</h2>
     <form method="post" action="/admin/gabarito" class="flex flex-col gap-3 text-sm text-slate-600">
       <label>Artilheiro da Copa

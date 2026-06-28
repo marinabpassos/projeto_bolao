@@ -45,6 +45,36 @@ def seed_matches(db: Session) -> int:
     return count
 
 
+def seed_missing_matches(db: Session) -> int:
+    """Insere jogos de fixtures.json ainda ausentes no banco (dedup por stage + kickoff_at)."""
+    existing: set[tuple[str, datetime]] = set()
+    for m in db.scalars(select(Match)):
+        kt = m.kickoff_at if m.kickoff_at.tzinfo else m.kickoff_at.replace(tzinfo=timezone.utc)
+        existing.add((m.stage, kt))
+
+    count = 0
+    for f in load_fixtures():
+        kt = datetime.fromisoformat(f["kickoff_at"])
+        if kt.tzinfo is None:
+            kt = kt.replace(tzinfo=timezone.utc)
+        if (f["stage"], kt) in existing:
+            continue
+        db.add(
+            Match(
+                stage=f["stage"],
+                round=f.get("round"),
+                home_team=f["home_team"],
+                away_team=f["away_team"],
+                teams_decided=f.get("teams_decided", True),
+                is_brazil=f.get("is_brazil", False),
+                kickoff_at=kt,
+            )
+        )
+        count += 1
+    db.commit()
+    return count
+
+
 def _aware(dt: datetime) -> datetime:
     """Garante datetime com timezone (assume UTC se vier ingênuo do banco)."""
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)

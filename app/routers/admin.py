@@ -9,7 +9,7 @@ from app.auth import require_admin
 from app.db import get_db
 from app.models import Match, Settlement, User
 from app.phases import PHASES_PROGRESS
-from app.services import recompute_match, recompute_specials, seed_matches
+from app.services import recompute_match, recompute_specials, seed_matches, seed_missing_matches
 from app.templating import templates
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -34,6 +34,12 @@ def dashboard(request: Request, user: User = Depends(require_admin), db: Session
 @router.post("/seed")
 def run_seed(user: User = Depends(require_admin), db: Session = Depends(get_db)):
     seed_matches(db)
+    return RedirectResponse(url="/admin", status_code=303)
+
+
+@router.post("/seed-missing")
+def run_seed_missing(user: User = Depends(require_admin), db: Session = Depends(get_db)):
+    seed_missing_matches(db)
     return RedirectResponse(url="/admin", status_code=303)
 
 
