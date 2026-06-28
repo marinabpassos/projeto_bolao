@@ -43,6 +43,7 @@ class Match(Base):
     neymar_played: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     endrick_played: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     finished: Mapped[bool] = mapped_column(Boolean, default=False)
+    who_advanced: Mapped[str | None] = mapped_column(String, nullable=True)
 
 
 class Prediction(Base):
@@ -55,6 +56,7 @@ class Prediction(Base):
     home_pred: Mapped[int] = mapped_column(Integer)
     away_pred: Mapped[int] = mapped_column(Integer)
     points: Mapped[int] = mapped_column(Integer, default=0)
+    qualifier_pred: Mapped[str | None] = mapped_column(String, nullable=True)
 
 
 class BrazilMatchPrediction(Base):

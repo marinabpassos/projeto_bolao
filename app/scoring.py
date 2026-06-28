@@ -16,6 +16,7 @@ from app.phases import (
 POINTS_EXACT = 10   # placar cravado
 POINTS_GOALDIFF = 7  # acertou o vencedor/empate E o saldo de gols
 POINTS_WINNER = 5   # acertou só o vencedor/empate
+POINTS_QUALIFIER = 5  # bônus por acertar quem avançou em prorrogação/pênaltis
 
 
 def _sign(n: int) -> int:
@@ -32,6 +33,28 @@ def score_match(pred_home: int, pred_away: int, real_home: int, real_away: int) 
     if _sign(pred_home - pred_away) == _sign(real_home - real_away):
         return POINTS_WINNER
     return 0
+
+
+def score_knockout_match(
+    pred_home: int,
+    pred_away: int,
+    qualifier_pred: str | None,
+    real_home: int,
+    real_away: int,
+    who_advanced: str | None,
+) -> int:
+    """Pontos de um palpite de mata-mata: placar dos 90 min + bônus de qualificador.
+
+    Bônus de +5 pts: somente quando TANTO o palpite QUANTO o resultado real
+    foram empate nos 90 min E o qualificador previsto bate com quem avançou.
+    """
+    base = score_match(pred_home, pred_away, real_home, real_away)
+    pred_draw = pred_home == pred_away
+    real_draw = real_home == real_away
+    if pred_draw and real_draw and qualifier_pred and who_advanced:
+        if qualifier_pred == who_advanced:
+            base += POINTS_QUALIFIER
+    return base
 
 
 def tier_for_phase(stage: str) -> int:

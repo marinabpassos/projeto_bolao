@@ -4,6 +4,7 @@ import pytest
 
 from app.scoring import (
     score_match,
+    score_knockout_match,
     tier_for_phase,
     artilheiro_points,
     brazil_yesno_points,
@@ -123,3 +124,47 @@ class TestBrazilProgress:
 
     def test_sem_palpites_retorna_vazio(self):
         assert brazil_progress_points({}, "quartas") == {}
+
+
+# ---------------------------------------------------------------------------
+# Palpite de quem avança no mata-mata: bônus +5 se ambos empate e qualificador certo
+# ---------------------------------------------------------------------------
+class TestScoreKnockoutMatch:
+    # --- placar decidido em 90 min: bônus nunca se aplica ---
+    def test_placar_cravado_sem_empate(self):
+        assert score_knockout_match(2, 1, "home", 2, 1, "home") == 10
+
+    def test_placar_winner_goaldiff(self):
+        assert score_knockout_match(1, 0, "home", 2, 1, "home") == 7
+
+    def test_placar_so_winner(self):
+        # 2-0 previu, saiu 3-0 — saldos diferentes (+2 vs +3), mesmo vencedor → 5 pts
+        assert score_knockout_match(2, 0, "home", 3, 0, "home") == 5
+
+    def test_errou_resultado_nao_ganha_bonus(self):
+        # Previu empate, saiu vitória — 0 pts (nem tenta bônus)
+        assert score_knockout_match(1, 1, "home", 2, 1, "home") == 0
+
+    # --- prorrogação/pênaltis: ambos empate nos 90 min ---
+    def test_cravou_placar_e_qualificador(self):
+        # 1x1 + home avança
+        assert score_knockout_match(1, 1, "home", 1, 1, "home") == 15  # 10 + 5
+
+    def test_acertou_empate_e_qualificador_saldo(self):
+        # 1x1 previu, saiu 0x0 — mesmo saldo (0), qualificador correto
+        assert score_knockout_match(1, 1, "home", 0, 0, "home") == 12  # 7 + 5
+
+    def test_acertou_empate_mas_errou_qualificador(self):
+        # Placar cravado mas errou quem avança
+        assert score_knockout_match(1, 1, "home", 1, 1, "away") == 10  # 10 + 0
+
+    def test_acertou_empate_qualificador_saldo_errou_quem_avanca(self):
+        assert score_knockout_match(1, 1, "home", 0, 0, "away") == 7   # 7 + 0
+
+    def test_qualificador_none_nao_da_bonus(self):
+        # Usuário não preencheu o qualifier (palpite antigo)
+        assert score_knockout_match(1, 1, None, 1, 1, "home") == 10    # 10 + 0
+
+    def test_who_advanced_none_nao_da_bonus(self):
+        # Admin ainda não informou quem avançou
+        assert score_knockout_match(1, 1, "home", 1, 1, None) == 10    # 10 + 0

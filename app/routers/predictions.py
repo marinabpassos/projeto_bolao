@@ -18,6 +18,7 @@ def save_prediction(
     match_id: int,
     home_pred: int = Form(...),
     away_pred: int = Form(...),
+    qualifier_pred: str = Form(default=""),
     user: User = Depends(require_user),
     db: Session = Depends(get_db),
 ):
@@ -39,5 +40,7 @@ def save_prediction(
         db.add(pred)
     pred.home_pred = home_pred
     pred.away_pred = away_pred
+    if match.stage != "grupos":
+        pred.qualifier_pred = qualifier_pred if qualifier_pred in ("home", "away") else None
     db.commit()
     return RedirectResponse(url=f"/?saved={match_id}#jogo-{match_id}", status_code=303)

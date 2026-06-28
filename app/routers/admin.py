@@ -81,6 +81,7 @@ def set_result(
     away_score: int = Form(...),
     neymar_played: str = Form(default="off"),
     endrick_played: str = Form(default="off"),
+    who_advanced: str = Form(default=""),
     user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
@@ -93,6 +94,8 @@ def set_result(
     if match.is_brazil:
         match.neymar_played = neymar_played == "on"
         match.endrick_played = endrick_played == "on"
+    if match.stage != "grupos":
+        match.who_advanced = who_advanced if who_advanced in ("home", "away") else None
     db.commit()
     recompute_match(db, match)
     return RedirectResponse(url="/admin", status_code=303)

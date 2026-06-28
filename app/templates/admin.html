@@ -78,6 +78,17 @@
       <label class="flex items-center gap-1 text-xs text-slate-500"><input type="checkbox" name="neymar_played" {{ 'checked' if m.neymar_played }}> Neymar entrou</label>
       <label class="flex items-center gap-1 text-xs text-slate-500"><input type="checkbox" name="endrick_played" {{ 'checked' if m.endrick_played }}> Endrick entrou</label>
       {% endif %}
+      {% if m.stage != 'grupos' %}
+      <div class="flex items-center gap-3 text-sm">
+        <span class="text-xs text-slate-400">Quem avançou:</span>
+        <label class="flex items-center gap-1 text-xs text-slate-500">
+          <input type="radio" name="who_advanced" value="home" {{ 'checked' if m.who_advanced == 'home' }}> {{ m.home_team }}
+        </label>
+        <label class="flex items-center gap-1 text-xs text-slate-500">
+          <input type="radio" name="who_advanced" value="away" {{ 'checked' if m.who_advanced == 'away' }}> {{ m.away_team }}
+        </label>
+      </div>
+      {% endif %}
       <button class="px-3 py-1.5 rounded-md bg-brand-green text-white text-xs font-medium hover:brightness-110 transition">Lançar resultado</button>
     </form>
   </article>

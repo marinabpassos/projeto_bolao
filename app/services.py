@@ -123,10 +123,17 @@ def recompute_match(db: Session, match: Match) -> None:
     """Recalcula os pontos de um jogo (placar + perguntas do Brasil)."""
     if not match.finished or match.home_score is None or match.away_score is None:
         return
+    is_knockout = match.stage != "grupos"
     for pred in db.scalars(select(Prediction).where(Prediction.match_id == match.id)):
-        pred.points = scoring.score_match(
-            pred.home_pred, pred.away_pred, match.home_score, match.away_score
-        )
+        if is_knockout:
+            pred.points = scoring.score_knockout_match(
+                pred.home_pred, pred.away_pred, pred.qualifier_pred,
+                match.home_score, match.away_score, match.who_advanced,
+            )
+        else:
+            pred.points = scoring.score_match(
+                pred.home_pred, pred.away_pred, match.home_score, match.away_score
+            )
     if match.is_brazil:
         for bp in db.scalars(
             select(BrazilMatchPrediction).where(BrazilMatchPrediction.match_id == match.id)
@@ -254,6 +261,10 @@ def sync_results_from_api(db: Session, token: str) -> int:
         local.home_score = home_score
         local.away_score = away_score
         local.finished = True
+        # Determinar quem avançou a partir do campo "winner" da API
+        winner = (m.get("score") or {}).get("winner")  # "HOME_TEAM" | "AWAY_TEAM" | null
+        if local.stage != "grupos" and winner:
+            local.who_advanced = "home" if winner == "HOME_TEAM" else "away"
         db.commit()
         recompute_match(db, local)
         count += 1
