@@ -1,6 +1,6 @@
 """Regras de negócio compartilhadas: abertura de palpites, recálculo e ranking."""
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -193,3 +193,69 @@ def compute_ranking(db: Session) -> list[dict]:
         })
     ranking.sort(key=lambda r: (-r["total"], r["user"].name.casefold()))
     return ranking
+
+
+# --------------------------------------------------------------------------- #
+# Sincronização de resultados via football-data.org                            #
+# --------------------------------------------------------------------------- #
+_STAGE_MAP_API = {
+    "GROUP_STAGE": "grupos",
+    "LAST_32": "16avos",
+    "LAST_16": "oitavas",
+    "QUARTER_FINALS": "quartas",
+    "SEMI_FINALS": "semi",
+    "FINAL": "final",
+}
+
+
+def sync_results_from_api(db: Session, token: str) -> int:
+    """Busca resultados finalizados na football-data.org e atualiza o banco.
+
+    Retorna o número de jogos atualizados.
+    Não re-processa jogos já marcados como finished.
+    Correspondência por (stage, kickoff_at) com tolerância de ±5 minutos.
+    """
+    import httpx  # import local para não pesar no bundle serverless
+
+    resp = httpx.get(
+        "https://api.football-data.org/v4/competitions/WC/matches",
+        params={"status": "FINISHED"},
+        headers={"X-Auth-Token": token},
+        timeout=30,
+    )
+    resp.raise_for_status()
+
+    count = 0
+    for m in resp.json().get("matches", []):
+        stage = _STAGE_MAP_API.get(m.get("stage", ""))
+        if not stage:
+            continue
+
+        score = (m.get("score") or {}).get("fullTime") or {}
+        home_score = score.get("home")
+        away_score = score.get("away")
+        if home_score is None or away_score is None:
+            continue
+
+        api_kickoff = datetime.fromisoformat(m["utcDate"].replace("Z", "+00:00"))
+        window_start = api_kickoff - timedelta(minutes=5)
+        window_end = api_kickoff + timedelta(minutes=5)
+
+        local = db.scalar(
+            select(Match).where(
+                Match.stage == stage,
+                Match.kickoff_at >= window_start.replace(tzinfo=None),
+                Match.kickoff_at <= window_end.replace(tzinfo=None),
+            )
+        )
+        if local is None or local.finished:
+            continue
+
+        local.home_score = home_score
+        local.away_score = away_score
+        local.finished = True
+        db.commit()
+        recompute_match(db, local)
+        count += 1
+
+    return count

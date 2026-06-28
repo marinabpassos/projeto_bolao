@@ -1,5 +1,7 @@
 """Área de administração: importar jogos, definir confrontos, lançar resultados e gabaritos."""
 
+import os
+
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
@@ -9,7 +11,7 @@ from app.auth import require_admin
 from app.db import get_db
 from app.models import Match, Settlement, User
 from app.phases import PHASES_PROGRESS
-from app.services import recompute_match, recompute_specials, seed_matches, seed_missing_matches
+from app.services import recompute_match, recompute_specials, seed_matches, seed_missing_matches, sync_results_from_api
 from app.templating import templates
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -40,6 +42,15 @@ def run_seed(user: User = Depends(require_admin), db: Session = Depends(get_db))
 @router.post("/seed-missing")
 def run_seed_missing(user: User = Depends(require_admin), db: Session = Depends(get_db)):
     seed_missing_matches(db)
+    return RedirectResponse(url="/admin", status_code=303)
+
+
+@router.post("/sync-resultados")
+def run_sync_resultados(user: User = Depends(require_admin), db: Session = Depends(get_db)):
+    token = os.environ.get("FOOTBALL_DATA_TOKEN", "")
+    if not token:
+        raise HTTPException(status_code=500, detail="FOOTBALL_DATA_TOKEN não configurado.")
+    sync_results_from_api(db, token)
     return RedirectResponse(url="/admin", status_code=303)
 
 

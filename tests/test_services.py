@@ -7,7 +7,7 @@ from sqlalchemy import create_engine, select, func
 from sqlalchemy.orm import Session
 
 from app.models import Base, Match
-from app.services import seed_missing_matches
+from app.services import seed_missing_matches, sync_results_from_api
 
 
 @pytest.fixture()
@@ -86,3 +86,83 @@ class TestSeedMissingMatches:
         seed_missing_matches(db)
         count2 = seed_missing_matches(db)
         assert count2 == 0
+
+
+import httpx
+import respx
+
+
+FAKE_API_RESPONSE = {
+    "matches": [
+        {
+            "stage": "LAST_32",
+            "utcDate": "2026-06-29T19:00:00Z",
+            "status": "FINISHED",
+            "homeTeam": {"name": "Germany"},
+            "awayTeam": {"name": "Morocco"},
+            "score": {
+                "fullTime": {"home": 2, "away": 1}
+            },
+        },
+        {
+            "stage": "LAST_32",
+            "utcDate": "2026-06-30T19:00:00Z",
+            "status": "FINISHED",
+            "homeTeam": {"name": "France"},
+            "awayTeam": {"name": "Japan"},
+            "score": {
+                "fullTime": {"home": None, "away": None}  # ainda sem placar (não deve atualizar)
+            },
+        },
+    ]
+}
+
+
+class TestSyncResultsFromApi:
+    def test_atualiza_jogo_finalizado(self, db, respx_mock):
+        respx_mock.get("https://api.football-data.org/v4/competitions/WC/matches").mock(
+            return_value=httpx.Response(200, json=FAKE_API_RESPONSE)
+        )
+        # Jogo existe no banco, ainda não finalizado
+        m = _match("16avos", "2026-06-29T19:00:00+00:00", "Germany", "Morocco")
+        m.teams_decided = True
+        db.add(m)
+        db.commit()
+
+        count = sync_results_from_api(db, token="fake-token")
+
+        assert count == 1
+        db.refresh(m)
+        assert m.finished is True
+        assert m.home_score == 2
+        assert m.away_score == 1
+
+    def test_ignora_placar_nulo(self, db, respx_mock):
+        respx_mock.get("https://api.football-data.org/v4/competitions/WC/matches").mock(
+            return_value=httpx.Response(200, json=FAKE_API_RESPONSE)
+        )
+        m = _match("16avos", "2026-06-30T19:00:00+00:00", "France", "Japan")
+        m.teams_decided = True
+        db.add(m)
+        db.commit()
+
+        count = sync_results_from_api(db, token="fake-token")
+
+        assert count == 0
+        db.refresh(m)
+        assert m.finished is False
+
+    def test_nao_re_processa_jogo_ja_finalizado(self, db, respx_mock):
+        respx_mock.get("https://api.football-data.org/v4/competitions/WC/matches").mock(
+            return_value=httpx.Response(200, json=FAKE_API_RESPONSE)
+        )
+        m = _match("16avos", "2026-06-29T19:00:00+00:00", "Germany", "Morocco")
+        m.teams_decided = True
+        m.finished = True
+        m.home_score = 2
+        m.away_score = 1
+        db.add(m)
+        db.commit()
+
+        count = sync_results_from_api(db, token="fake-token")
+        assert count == 0
