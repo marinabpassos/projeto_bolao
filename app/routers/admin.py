@@ -1,5 +1,7 @@
 """Área de administração: importar jogos, definir confrontos, lançar resultados e gabaritos."""
 
+import os
+
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
@@ -9,7 +11,7 @@ from app.auth import require_admin
 from app.db import get_db
 from app.models import Match, Settlement, User
 from app.phases import PHASES_PROGRESS
-from app.services import recompute_match, recompute_specials, seed_matches
+from app.services import recompute_match, recompute_specials, seed_matches, seed_missing_matches, sync_results_from_api
 from app.templating import templates
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -34,6 +36,24 @@ def dashboard(request: Request, user: User = Depends(require_admin), db: Session
 @router.post("/seed")
 def run_seed(user: User = Depends(require_admin), db: Session = Depends(get_db)):
     seed_matches(db)
+    return RedirectResponse(url="/admin", status_code=303)
+
+
+@router.post("/seed-missing")
+def run_seed_missing(user: User = Depends(require_admin), db: Session = Depends(get_db)):
+    seed_missing_matches(db)
+    return RedirectResponse(url="/admin", status_code=303)
+
+
+@router.post("/sync-resultados")
+def run_sync_resultados(user: User = Depends(require_admin), db: Session = Depends(get_db)):
+    token = os.environ.get("FOOTBALL_DATA_TOKEN", "")
+    if not token:
+        raise HTTPException(status_code=500, detail="FOOTBALL_DATA_TOKEN não configurado.")
+    try:
+        sync_results_from_api(db, token)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Erro na API: {exc}") from exc
     return RedirectResponse(url="/admin", status_code=303)
 
 
@@ -64,6 +84,7 @@ def set_result(
     away_score: int = Form(...),
     neymar_played: str = Form(default="off"),
     endrick_played: str = Form(default="off"),
+    who_advanced: str = Form(default=""),
     user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
@@ -76,6 +97,8 @@ def set_result(
     if match.is_brazil:
         match.neymar_played = neymar_played == "on"
         match.endrick_played = endrick_played == "on"
+    if match.stage != "grupos":
+        match.who_advanced = who_advanced if who_advanced in ("home", "away") else None
     db.commit()
     recompute_match(db, match)
     return RedirectResponse(url="/admin", status_code=303)

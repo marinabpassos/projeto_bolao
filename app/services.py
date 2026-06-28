@@ -1,6 +1,6 @@
 """Regras de negócio compartilhadas: abertura de palpites, recálculo e ranking."""
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -38,6 +38,36 @@ def seed_matches(db: Session) -> int:
                 teams_decided=f.get("teams_decided", True),
                 is_brazil=f.get("is_brazil", False),
                 kickoff_at=datetime.fromisoformat(f["kickoff_at"]),
+            )
+        )
+        count += 1
+    db.commit()
+    return count
+
+
+def seed_missing_matches(db: Session) -> int:
+    """Insere jogos de fixtures.json ainda ausentes no banco (dedup por stage + kickoff_at)."""
+    existing: set[tuple[str, datetime]] = set()
+    for m in db.scalars(select(Match)):
+        kt = m.kickoff_at if m.kickoff_at.tzinfo else m.kickoff_at.replace(tzinfo=timezone.utc)
+        existing.add((m.stage, kt))
+
+    count = 0
+    for f in load_fixtures():
+        kt = datetime.fromisoformat(f["kickoff_at"])
+        if kt.tzinfo is None:
+            kt = kt.replace(tzinfo=timezone.utc)
+        if (f["stage"], kt) in existing:
+            continue
+        db.add(
+            Match(
+                stage=f["stage"],
+                round=f.get("round"),
+                home_team=f["home_team"],
+                away_team=f["away_team"],
+                teams_decided=f.get("teams_decided", True),
+                is_brazil=f.get("is_brazil", False),
+                kickoff_at=kt,
             )
         )
         count += 1
@@ -93,10 +123,17 @@ def recompute_match(db: Session, match: Match) -> None:
     """Recalcula os pontos de um jogo (placar + perguntas do Brasil)."""
     if not match.finished or match.home_score is None or match.away_score is None:
         return
+    is_knockout = match.stage != "grupos"
     for pred in db.scalars(select(Prediction).where(Prediction.match_id == match.id)):
-        pred.points = scoring.score_match(
-            pred.home_pred, pred.away_pred, match.home_score, match.away_score
-        )
+        if is_knockout:
+            pred.points = scoring.score_knockout_match(
+                pred.home_pred, pred.away_pred, pred.qualifier_pred,
+                match.home_score, match.away_score, match.who_advanced,
+            )
+        else:
+            pred.points = scoring.score_match(
+                pred.home_pred, pred.away_pred, match.home_score, match.away_score
+            )
     if match.is_brazil:
         for bp in db.scalars(
             select(BrazilMatchPrediction).where(BrazilMatchPrediction.match_id == match.id)
@@ -163,3 +200,74 @@ def compute_ranking(db: Session) -> list[dict]:
         })
     ranking.sort(key=lambda r: (-r["total"], r["user"].name.casefold()))
     return ranking
+
+
+# --------------------------------------------------------------------------- #
+# Sincronização de resultados via football-data.org                            #
+# --------------------------------------------------------------------------- #
+_STAGE_MAP_API = {
+    "GROUP_STAGE": "grupos",
+    "LAST_32": "16avos",
+    "LAST_16": "oitavas",
+    "QUARTER_FINALS": "quartas",
+    "SEMI_FINALS": "semi",
+    "FINAL": "final",
+}
+
+
+def sync_results_from_api(db: Session, token: str) -> int:
+    """Busca resultados finalizados na football-data.org e atualiza o banco.
+
+    Retorna o número de jogos atualizados.
+    Não re-processa jogos já marcados como finished.
+    Correspondência por (stage, kickoff_at) com tolerância de ±5 minutos.
+    """
+    import httpx  # import local para não pesar no bundle serverless
+
+    resp = httpx.get(
+        "https://api.football-data.org/v4/competitions/WC/matches",
+        params={"status": "FINISHED"},
+        headers={"X-Auth-Token": token},
+        timeout=30,
+    )
+    resp.raise_for_status()
+
+    count = 0
+    for m in resp.json().get("matches", []):
+        stage = _STAGE_MAP_API.get(m.get("stage", ""))
+        if not stage:
+            continue
+
+        score_block = m.get("score") or {}
+        score = score_block.get("regularTime") or score_block.get("fullTime") or {}
+        home_score = score.get("home")
+        away_score = score.get("away")
+        if home_score is None or away_score is None:
+            continue
+
+        api_kickoff = datetime.fromisoformat(m["utcDate"].replace("Z", "+00:00"))
+        window_start = api_kickoff - timedelta(minutes=5)
+        window_end = api_kickoff + timedelta(minutes=5)
+
+        local = db.scalar(
+            select(Match).where(
+                Match.stage == stage,
+                Match.kickoff_at >= window_start,
+                Match.kickoff_at <= window_end,
+            )
+        )
+        if local is None or local.finished:
+            continue
+
+        local.home_score = home_score
+        local.away_score = away_score
+        local.finished = True
+        # Determinar quem avançou a partir do campo "winner" da API
+        winner = (m.get("score") or {}).get("winner")  # "HOME_TEAM" | "AWAY_TEAM" | null
+        if local.stage != "grupos" and winner:
+            local.who_advanced = "home" if winner == "HOME_TEAM" else "away"
+        db.commit()
+        recompute_match(db, local)
+        count += 1
+
+    return count

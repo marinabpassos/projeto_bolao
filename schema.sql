@@ -22,7 +22,8 @@ create table if not exists matches (
     away_score     int,
     neymar_played  boolean,                        -- só jogos do Brasil
     endrick_played boolean,
-    finished       boolean not null default false
+    finished       boolean not null default false,
+    who_advanced   text                              -- 'home' | 'away' | null (mata-mata: quem avançou)
 );
 
 create table if not exists predictions (
@@ -31,7 +32,8 @@ create table if not exists predictions (
     match_id  bigint not null references matches(id) on delete cascade,
     home_pred int not null,
     away_pred int not null,
-    points    int not null default 0,
+    points         int not null default 0,
+    qualifier_pred text,                            -- 'home' | 'away' | null (mata-mata: quem o usuário acha que avança)
     unique (user_id, match_id)
 );
 
