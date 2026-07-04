@@ -202,6 +202,54 @@ def compute_ranking(db: Session) -> list[dict]:
     return ranking
 
 
+def sync_fixtures(db: Session) -> dict:
+    """Sincroniza fixtures do banco: adiciona jogos reais e remove placeholders da mesma fase."""
+    fixtures = load_fixtures()
+
+    real_by_stage: dict[str, list[dict]] = {}
+    for f in fixtures:
+        if f.get("teams_decided", True) and f["home_team"] != "A definir":
+            real_by_stage.setdefault(f["stage"], []).append(f)
+
+    existing: set[tuple] = set()
+    for m in db.scalars(select(Match)):
+        kt = m.kickoff_at if m.kickoff_at.tzinfo else m.kickoff_at.replace(tzinfo=timezone.utc)
+        existing.add((m.stage, kt))
+
+    added = removed = 0
+    for stage, stage_fixtures in real_by_stage.items():
+        for p in db.scalars(
+            select(Match).where(
+                Match.stage == stage,
+                Match.teams_decided == False,  # noqa: E712
+                Match.home_team == "A definir",
+            )
+        ):
+            db.delete(p)
+            removed += 1
+
+        for f in stage_fixtures:
+            kt = datetime.fromisoformat(f["kickoff_at"])
+            if kt.tzinfo is None:
+                kt = kt.replace(tzinfo=timezone.utc)
+            if (f["stage"], kt) not in existing:
+                db.add(
+                    Match(
+                        stage=f["stage"],
+                        round=f.get("round"),
+                        home_team=f["home_team"],
+                        away_team=f["away_team"],
+                        teams_decided=f.get("teams_decided", True),
+                        is_brazil=f.get("is_brazil", False),
+                        kickoff_at=kt,
+                    )
+                )
+                added += 1
+
+    db.commit()
+    return {"added": added, "removed": removed}
+
+
 # --------------------------------------------------------------------------- #
 # Sincronização de resultados via football-data.org                            #
 # --------------------------------------------------------------------------- #

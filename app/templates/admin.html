@@ -21,6 +21,14 @@
   </section>
 
   <section class="bg-white rounded-xl border border-slate-200 p-5">
+    <h2 class="font-semibold text-slate-900 mb-2">Sincronizar fixtures</h2>
+    <p class="text-sm text-slate-500 mb-3">Adiciona jogos reais e remove placeholders "A definir" das fases que já têm confrontos definidos em <code class="text-slate-600">fixtures.json</code>.</p>
+    <form method="post" action="/admin/sync-fixtures">
+      <button class="px-4 py-2 rounded-lg bg-amber-600 text-white font-medium hover:brightness-110 transition">Sincronizar fixtures</button>
+    </form>
+  </section>
+
+  <section class="bg-white rounded-xl border border-slate-200 p-5">
     <h2 class="font-semibold text-slate-900 mb-2">Sincronizar resultados</h2>
     <p class="text-sm text-slate-500 mb-3">Busca placares de jogos finalizados na football-data.org e recalcula pontos automaticamente. Requer <code class="text-slate-600">FOOTBALL_DATA_TOKEN</code>.</p>
     <form method="post" action="/admin/sync-resultados">
