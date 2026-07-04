@@ -64,6 +64,7 @@ def home(request: Request, user: User | None = Depends(get_current_user), db: Se
             "user": user,
             "groups": groups,
             "view": view,
+            "past_groups": [(s, ms) for s, ms in groups if s in view["past_stages"]],
             "my_preds": my_preds,
             "my_br": my_br,
             "is_open": {m.id: match_is_open(m, now) for m in matches},

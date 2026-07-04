@@ -11,14 +11,18 @@
   </div>
 {% endif %}
 
-{% for stage, matches in groups %}
-<section class="mb-7">
-  <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5">{{ stage_labels[stage] }}</h2>
-  <div class="grid gap-2.5">
-    {% for m in matches %}
-    {{ cards.match_card(m, my_preds.get(m.id), my_br.get(m.id), user, is_open[m.id], saved) }}
-    {% endfor %}
-  </div>
-</section>
-{% endfor %}
+{% if view.view_mode == 'bracket' %}
+  {% include "_bracket.html" %}
+{% else %}
+  {% for stage, matches in groups %}
+  <section class="mb-7">
+    <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5">{{ stage_labels[stage] }}</h2>
+    <div class="grid gap-2.5">
+      {% for m in matches %}
+      {{ cards.match_card(m, my_preds.get(m.id), my_br.get(m.id), user, is_open[m.id], saved) }}
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+{% endif %}
 {% endblock %}

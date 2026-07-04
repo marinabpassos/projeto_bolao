@@ -1,0 +1,160 @@
+{% import "_match_card.html" as cards %}
+
+{# ---------- mini-chave: torneio inteiro, lado A <- 🏆 -> lado B ---------- #}
+{% macro mini_pair(m, live) %}
+<a href="/?fase={{ m.stage if m else '' }}" class="flex flex-col gap-px p-0.5 rounded border {{ 'border-brand-green bg-brand-green/10' if live else 'border-slate-200 bg-slate-50' }}">
+  {% for name in ([m.home_team, m.away_team] if m and m.teams_decided else [None, None]) %}
+    {% set url = name and flag_url(name, 20) %}
+    {% if url %}<img src="{{ url }}" alt="{{ name }}" loading="lazy" class="w-[13px] h-[10px] object-cover rounded-[1px]">
+    {% else %}<span class="w-[13px] h-[10px] bg-slate-200 rounded-[1px]"></span>{% endif %}
+  {% endfor %}
+</a>
+{% endmacro %}
+
+<div class="bg-white rounded-xl border border-slate-200 p-2.5 mb-3">
+  <p class="text-[8px] font-semibold uppercase tracking-wider text-slate-400 text-center mb-1.5">Chave completa · toque numa fase para navegar</p>
+  <div class="flex items-center justify-between gap-1">
+    {% for stage in ['oitavas', 'quartas', 'semi'] %}
+    <div class="flex flex-col gap-1 items-center flex-1">
+      {% for pos in range(1, (view.bracket[stage]|length) + 1) if pos <= (view.bracket[stage]|length) // 2 %}
+        {{ mini_pair(view.bracket[stage][pos], stage == view.selected_stage) }}
+      {% endfor %}
+      <span class="text-[7px] text-slate-400">{{ stage[:3]|upper }}·A</span>
+    </div>
+    {% endfor %}
+    <div class="flex flex-col items-center flex-1">
+      <span class="text-sm">🏆</span><span class="text-[7px] text-slate-400">FINAL</span>
+    </div>
+    {% for stage in ['semi', 'quartas', 'oitavas'] %}
+    <div class="flex flex-col gap-1 items-center flex-1">
+      {% for pos in range(1, (view.bracket[stage]|length) + 1) if pos > (view.bracket[stage]|length) // 2 %}
+        {{ mini_pair(view.bracket[stage][pos], stage == view.selected_stage) }}
+      {% endfor %}
+      <span class="text-[7px] text-slate-400">{{ stage[:3]|upper }}·B</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{# ---------- fases anteriores recolhidas ---------- #}
+{% if view.past_stages %}
+<div class="mb-3">
+  <button type="button" onclick="var el=document.getElementById('fases-passadas'); el.classList.toggle('hidden'); this.querySelector('span+span').textContent = el.classList.contains('hidden') ? 'ver ▸' : 'esconder ▾'"
+          class="w-full flex items-center justify-between bg-slate-100 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-500">
+    <span class="truncate">Fases anteriores: <b class="text-slate-600">{% for s in view.past_stages %}{{ stage_labels[s] }}{{ ' · ' if not loop.last }}{% endfor %}</b></span>
+    <span class="text-brand-green font-semibold shrink-0 ml-2">ver ▸</span>
+  </button>
+  {# escondido via JS no load — sem JS o histórico fica visível (degradação) #}
+  <div id="fases-passadas" class="mt-3">
+    {% for stage, matches_da_fase in past_groups %}
+    <section class="mb-5">
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5">{{ stage_labels[stage] }}</h2>
+      <div class="grid gap-2.5">
+        {% for m in matches_da_fase %}
+        {{ cards.match_card(m, my_preds.get(m.id), my_br.get(m.id), user, is_open[m.id], saved) }}
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{# ---------- abas Lado A | Lado B (sublinhado) ---------- #}
+{% if view.selected_stage != 'final' %}
+<div class="flex justify-center gap-6 border-b border-slate-200 mb-4" id="abas-lado">
+  <button type="button" data-lado="a" onclick="trocaLado('a')" class="aba-lado text-sm font-semibold text-slate-900 border-b-2 border-brand-green -mb-px pb-1.5 px-1">Lado A</button>
+  <button type="button" data-lado="b" onclick="trocaLado('b')" class="aba-lado text-sm text-slate-400 border-b-2 border-transparent -mb-px pb-1.5 px-1">Lado B</button>
+</div>
+{% endif %}
+
+{# ---------- árvore vertical do lado selecionado ---------- #}
+{% macro linha_time(m, name) %}
+  {% set url = flag_url(name) %}
+  <div class="flex items-center gap-1.5 py-0.5 text-sm text-slate-800">
+    {% if url %}<img src="{{ url }}" alt="" loading="lazy" class="w-[18px] h-auto rounded-[2px] shadow-sm">
+    {% else %}<span class="w-[18px] h-[13px] bg-slate-200 rounded-[2px]"></span>{% endif %}
+    <span class="flex-1 truncate">{% if m.is_brazil and name == 'Brasil' %}<span class="text-brand-yellow">★</span> {% endif %}{{ name }}</span>
+    {% if m.finished %}<span class="font-bold tabular-nums {{ 'text-slate-900' if (name == m.home_team and m.who_advanced == 'home') or (name == m.away_team and m.who_advanced == 'away') else 'text-slate-400' }}">{{ m.home_score if name == m.home_team else m.away_score }}</span>
+    {% else %}<span class="text-slate-300">–</span>{% endif %}
+  </div>
+{% endmacro %}
+
+{% macro arvore(pairs, lado) %}
+<div id="lado-{{ lado }}" class="lado-chave">
+  <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5">{{ stage_labels[view.selected_stage] }}{{ ' · Lado ' ~ lado|upper if view.selected_stage != 'final' }}</h2>
+  {% for pair in pairs %}
+  <div class="flex items-center mb-2.5">
+    <div class="flex-1 grid gap-2">
+      {% for pos, m in pair.games %}
+        {% if m and m.teams_decided %}
+        <div>
+          <button type="button" onclick="document.getElementById('card-{{ m.id }}').classList.toggle('hidden')"
+                  class="w-full text-left bg-white rounded-xl border {{ 'border-brand-green' if is_open[m.id] else 'border-slate-200' }} px-3 py-1.5 hover:border-slate-400 transition">
+            {{ linha_time(m, m.home_team) }}
+            {{ linha_time(m, m.away_team) }}
+            <p class="text-[10px] mt-0.5 {{ 'text-brand-green' if my_preds.get(m.id) else 'text-slate-400' }}">
+              {% if m.finished and m.who_advanced %}→ {{ m.home_team if m.who_advanced == 'home' else m.away_team }} avançou
+              {% elif my_preds.get(m.id) %}✓ seu palpite: {{ my_preds[m.id].home_pred }}:{{ my_preds[m.id].away_pred }} · toque para editar
+              {% elif is_open[m.id] %}● aberto · toque para palpitar
+              {% else %}{{ m.kickoff_at | dt_br }}{% endif %}
+            </p>
+          </button>
+          <div id="card-{{ m.id }}" class="mt-2 card-palpite{{ ' card-salvo' if saved == m.id|string or saved == 'brasil-' ~ m.id|string }}">
+            {{ cards.match_card(m, my_preds.get(m.id), my_br.get(m.id), user, is_open[m.id], saved) }}
+          </div>
+        </div>
+        {% else %}
+        <div class="rounded-xl border border-dashed border-slate-300 bg-slate-100 px-3 py-3 text-center text-xs text-slate-400">⏳ A definir{% if m %} · {{ m.kickoff_at | dt_br }}{% endif %}</div>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {% if pair.target %}
+    <div class="w-2.5 self-stretch my-4 border-y-2 border-r-2 border-slate-300 rounded-r-md shrink-0"></div>
+    <div class="w-16 shrink-0 ml-1 text-center text-[10px] text-slate-400">
+      <div class="rounded-lg border border-dashed border-slate-300 bg-slate-100 py-2">{{ pair.target }}</div>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}
+
+{{ arvore(view.pairs_a, 'a') }}
+{% if view.pairs_b %}{{ arvore(view.pairs_b, 'b') }}{% endif %}
+
+{# ---------- fases futuras compactas ---------- #}
+{% if view.future_rows %}
+<h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mt-5 mb-2">Mais adiante</h2>
+<div class="grid gap-1.5">
+  {% for row in view.future_rows %}
+  <div class="bg-white rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-400 flex justify-between">
+    <span>{% if row.label == 'FINAL' %}🏆 {% endif %}{{ row.label }} · A definir</span>
+    <span>{{ row.match.kickoff_at | dt_br if row.match }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<script>
+// Esconde via JS o que é interativo — sem JS, cards e histórico ficam visíveis (degradação).
+// O card recém-salvo (.card-salvo) fica aberto para o "✓ Palpite salvo!" aparecer.
+document.querySelectorAll('.card-palpite:not(.card-salvo)').forEach(function (el) { el.classList.add('hidden'); });
+var fp = document.getElementById('fases-passadas');
+if (fp) { fp.classList.add('hidden'); }
+
+function trocaLado(lado) {
+  document.querySelectorAll('.lado-chave').forEach(function (el) {
+    el.classList.toggle('hidden', el.id !== 'lado-' + lado);
+  });
+  document.querySelectorAll('.aba-lado').forEach(function (btn) {
+    var on = btn.dataset.lado === lado;
+    btn.classList.toggle('text-slate-900', on);
+    btn.classList.toggle('font-semibold', on);
+    btn.classList.toggle('border-brand-green', on);
+    btn.classList.toggle('text-slate-400', !on);
+    btn.classList.toggle('border-transparent', !on);
+  });
+}
+if (document.getElementById('abas-lado')) { trocaLado('a'); }
+</script>
