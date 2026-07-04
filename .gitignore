@@ -26,3 +26,6 @@ Thumbs.db
 
 .vercel
 .env*
+
+# Brainstorm visual companion
+.superpowers/

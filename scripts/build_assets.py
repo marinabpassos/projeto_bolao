@@ -21,6 +21,8 @@ APP = ROOT / "app"
 TEMPLATE_NAMES = [
     "base.html",
     "jogos.html",
+    "_match_card.html",
+    "_bracket.html",
     "apostas.html",
     "ranking.html",
     "regras.html",
