@@ -23,7 +23,8 @@ create table if not exists matches (
     neymar_played  boolean,                        -- só jogos do Brasil
     endrick_played boolean,
     finished       boolean not null default false,
-    who_advanced   text                              -- 'home' | 'away' | null (mata-mata: quem avançou)
+    who_advanced   text,                             -- 'home' | 'away' | null (mata-mata: quem avançou)
+    bracket_pos    int                               -- posição na chave (oitavas 1-8, quartas 1-4, semi 1-2, final 1)
 );
 
 create table if not exists predictions (
@@ -75,3 +76,6 @@ insert into settlement (id) values (1) on conflict (id) do nothing;
 
 create index if not exists idx_predictions_match on predictions(match_id);
 create index if not exists idx_brmatch_match on brazil_match_predictions(match_id);
+
+-- Migração para bancos já criados (rodar uma vez no SQL Editor do Supabase):
+-- alter table matches add column if not exists bracket_pos int;

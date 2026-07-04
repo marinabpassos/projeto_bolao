@@ -9,7 +9,7 @@ from sqlalchemy import create_engine, select, func
 from sqlalchemy.orm import Session
 
 from app.models import Base, Match
-from app.services import seed_missing_matches, sync_results_from_api
+from app.services import seed_missing_matches, sync_fixtures, sync_results_from_api
 
 
 @pytest.fixture()
@@ -196,3 +196,48 @@ class TestSyncResultsFromApi:
         assert m.who_advanced == "home"
         assert m.home_score == 1
         assert m.away_score == 1
+
+
+# --------------------------------------------------------------------------- #
+# bracket_pos                                                                  #
+# --------------------------------------------------------------------------- #
+BRACKET_FIXTURES = [
+    {
+        "stage": "oitavas", "round": None, "home_team": "Brasil", "away_team": "Noruega",
+        "teams_decided": True, "is_brazil": True,
+        "kickoff_at": "2026-07-05T20:00:00+00:00", "bracket_pos": 3,
+    },
+    {
+        "stage": "quartas", "round": None, "home_team": "A definir", "away_team": "A definir",
+        "teams_decided": False, "is_brazil": False,
+        "kickoff_at": "2026-07-10T19:00:00+00:00", "bracket_pos": 1,
+    },
+]
+
+
+def test_seed_missing_matches_carrega_bracket_pos(db, monkeypatch):
+    monkeypatch.setattr("app.services.load_fixtures", lambda: BRACKET_FIXTURES)
+    seed_missing_matches(db)
+    m = db.scalar(select(Match).where(Match.stage == "oitavas"))
+    assert m.bracket_pos == 3
+
+
+def test_sync_fixtures_backfill_bracket_pos_em_jogo_existente(db, monkeypatch):
+    # Jogo já no banco SEM bracket_pos (dado antigo), mesmo (stage, kickoff) do fixture.
+    db.add(_match("oitavas", "2026-07-05T20:00:00+00:00", "Brasil", "Noruega"))
+    db.commit()
+    monkeypatch.setattr("app.services.load_fixtures", lambda: BRACKET_FIXTURES)
+    sync_fixtures(db)
+    m = db.scalar(select(Match).where(Match.stage == "oitavas"))
+    assert m.bracket_pos == 3
+
+
+def test_sync_fixtures_nao_sobrescreve_bracket_pos(db, monkeypatch):
+    existing = _match("oitavas", "2026-07-05T20:00:00+00:00", "Brasil", "Noruega")
+    existing.bracket_pos = 7  # valor definido manualmente pelo admin
+    db.add(existing)
+    db.commit()
+    monkeypatch.setattr("app.services.load_fixtures", lambda: BRACKET_FIXTURES)
+    sync_fixtures(db)
+    m = db.scalar(select(Match).where(Match.stage == "oitavas"))
+    assert m.bracket_pos == 7

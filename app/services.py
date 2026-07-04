@@ -38,6 +38,7 @@ def seed_matches(db: Session) -> int:
                 teams_decided=f.get("teams_decided", True),
                 is_brazil=f.get("is_brazil", False),
                 kickoff_at=datetime.fromisoformat(f["kickoff_at"]),
+                bracket_pos=f.get("bracket_pos"),
             )
         )
         count += 1
@@ -68,6 +69,7 @@ def seed_missing_matches(db: Session) -> int:
                 teams_decided=f.get("teams_decided", True),
                 is_brazil=f.get("is_brazil", False),
                 kickoff_at=kt,
+                bracket_pos=f.get("bracket_pos"),
             )
         )
         count += 1
@@ -211,10 +213,10 @@ def sync_fixtures(db: Session) -> dict:
         if f.get("teams_decided", True) and f["home_team"] != "A definir":
             real_by_stage.setdefault(f["stage"], []).append(f)
 
-    existing: set[tuple] = set()
+    existing: dict[tuple, Match] = {}
     for m in db.scalars(select(Match)):
         kt = m.kickoff_at if m.kickoff_at.tzinfo else m.kickoff_at.replace(tzinfo=timezone.utc)
-        existing.add((m.stage, kt))
+        existing[(m.stage, kt)] = m
 
     added = removed = 0
     for stage, stage_fixtures in real_by_stage.items():
@@ -242,9 +244,22 @@ def sync_fixtures(db: Session) -> dict:
                         teams_decided=f.get("teams_decided", True),
                         is_brazil=f.get("is_brazil", False),
                         kickoff_at=kt,
+                        bracket_pos=f.get("bracket_pos"),
                     )
                 )
                 added += 1
+
+    # Backfill de bracket_pos em jogos já existentes (nunca sobrescreve valor definido).
+    for f in fixtures:
+        pos = f.get("bracket_pos")
+        if pos is None:
+            continue
+        kt = datetime.fromisoformat(f["kickoff_at"])
+        if kt.tzinfo is None:
+            kt = kt.replace(tzinfo=timezone.utc)
+        m = existing.get((f["stage"], kt))
+        if m is not None and m.bracket_pos is None:
+            m.bracket_pos = pos
 
     db.commit()
     return {"added": added, "removed": removed}

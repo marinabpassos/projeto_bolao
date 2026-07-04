@@ -44,6 +44,7 @@ class Match(Base):
     endrick_played: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     finished: Mapped[bool] = mapped_column(Boolean, default=False)
     who_advanced: Mapped[str | None] = mapped_column(String, nullable=True)
+    bracket_pos: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 class Prediction(Base):
