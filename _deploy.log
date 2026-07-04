@@ -1,0 +1,53 @@
+<claude-code-hint v="1" type="plugin" value="vercel@claude-plugins-official" />
+Vercel CLI 54.18.2 (Node.js 24.16.0)
+Retrieving project…
+Deploying marinabpassos-projects/projeto_bolao
+Uploading [--------------------] (0.0B/75KB)
+Uploading [=====---------------] (20.3KB/75KB)
+Uploading [============--------] (48.1KB/75KB)
+Uploading [===============-----] (58.2KB/75KB)
+Uploading [====================] (75.0KB/75KB)
+  Inspect         https://vercel.com/marinabpassos-projects/projeto_bolao/RfkGkCNFf7tu57d7MzNLhDnN1jAe
+  Production      https://projetobolao-1hzrx6v3r-marinabpassos-projects.vercel.app
+Building…
+Building…
+Running build in Washington, D.C., USA (East) – iad1
+Build machine configuration: 2 cores, 8 GB
+Retrieving list of deployment files...
+Downloading 59 deployment files...
+Restored build cache from previous deployment (63RyfFBgBF1Vcevpho6feSzQbHNZ)
+Running "vercel build"
+Vercel CLI 54.19.0
+WARNING! Due to `builds` existing in your configuration file, the Build and Development Settings defined in your Project Settings will not apply. Learn More: https://vercel.link/unused-build-settings
+No Python version specified in .python-version, pyproject.toml, or Pipfile.lock. Using python version: 3.12
+Using uv 0.10.11
+Installing required dependencies from requirements.txt...
+Build Completed in /vercel/output [2s]
+Deploying outputs...
+Deployment completed
+Creating build cache...
+[2K[1A[2K[G  Production      https://projetobolao-1hzrx6v3r-marinabpassos-projects.vercel.app
+Completing…
+▲ Aliased         https://projetobolao.vercel.app
+{
+  "status": "ok",
+  "deployment": {
+    "id": "dpl_RfkGkCNFf7tu57d7MzNLhDnN1jAe",
+    "url": "https://projetobolao-1hzrx6v3r-marinabpassos-projects.vercel.app",
+    "inspectorUrl": "https://vercel.com/marinabpassos-projects/projeto_bolao/RfkGkCNFf7tu57d7MzNLhDnN1jAe",
+    "readyState": "READY",
+    "target": "production",
+    "deploymentApiUrl": "https://api.vercel.com/v13/deployments/dpl_RfkGkCNFf7tu57d7MzNLhDnN1jAe"
+  },
+  "message": "Deployment projetobolao-1hzrx6v3r-marinabpassos-projects.vercel.app ready.",
+  "next": [
+    {
+      "command": "vercel inspect projetobolao-1hzrx6v3r-marinabpassos-projects.vercel.app",
+      "when": "Inspect deployment"
+    },
+    {
+      "command": "vercel deploy --prod",
+      "when": "Promote to production"
+    }
+  ]
+}
