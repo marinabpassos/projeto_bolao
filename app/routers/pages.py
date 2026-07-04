@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.auth import get_current_user
+from app.bracket import jogos_view
 from app.data_loader import load_players
 from app.db import get_db
 from app.models import (
@@ -54,12 +55,15 @@ def home(request: Request, user: User | None = Depends(get_current_user), db: Se
         if stage_matches:
             groups.append((stage, stage_matches))
 
+    view = jogos_view(matches, request.query_params.get("fase"))
+
     return templates.TemplateResponse(
         "jogos.html",
         {
             "request": request,
             "user": user,
             "groups": groups,
+            "view": view,
             "my_preds": my_preds,
             "my_br": my_br,
             "is_open": {m.id: match_is_open(m, now) for m in matches},
