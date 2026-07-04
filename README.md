@@ -93,7 +93,8 @@ Formato de cada jogo em `fixtures.json`:
   "away_team": "Camarões",
   "teams_decided": true,       // false = mata-mata ainda sem times (palpite fechado)
   "is_brazil": true,           // ativa as perguntas Neymar/Endrick
-  "kickoff_at": "2026-06-23T22:00:00+00:00"   // horário UTC
+  "kickoff_at": "2026-06-23T22:00:00+00:00",  // horário UTC
+  "bracket_pos": 3             // posição na chave (oitavas 1-8 ... final 1); null fora do mata-mata
 }
 ```
 
@@ -117,3 +118,8 @@ Quem estiver em `ADMIN_EMAILS` vê o menu **Admin** para: importar jogos, defini
 times dos confrontos do mata-mata, lançar resultados (e se Neymar/Endrick entraram)
 e definir os gabaritos finais (artilheiro e até onde o Brasil foi). Lançar resultado
 ou gabarito **recalcula a pontuação** automaticamente.
+
+> **Migração (bancos criados antes do chaveamento):** rode
+> `alter table matches add column if not exists bracket_pos int;` no SQL Editor
+> do Supabase e clique em **Admin → Sincronizar fixtures** para preencher as
+> posições da chave nos jogos existentes.
