@@ -277,6 +277,134 @@ _STAGE_MAP_API = {
     "FINAL": "final",
 }
 
+# A football-data.org devolve os nomes em inglês; o app usa português em todo lugar
+# (bandeiras em app/flags.py, detecção de Brasil). Traduz na fronteira da API.
+_TEAM_NAME_PT = {
+    "Algeria": "Argélia",
+    "Argentina": "Argentina",
+    "Australia": "Austrália",
+    "Austria": "Áustria",
+    "Belgium": "Bélgica",
+    "Bosnia-Herzegovina": "Bósnia e Herzegovina",
+    "Brazil": "Brasil",
+    "Canada": "Canadá",
+    "Cape Verde Islands": "Cabo Verde",
+    "Colombia": "Colômbia",
+    "Congo DR": "RD Congo",
+    "Croatia": "Croácia",
+    "Curaçao": "Curaçao",
+    "Czechia": "Tchéquia",
+    "Ecuador": "Equador",
+    "Egypt": "Egito",
+    "England": "Inglaterra",
+    "France": "França",
+    "Germany": "Alemanha",
+    "Ghana": "Gana",
+    "Haiti": "Haiti",
+    "Iran": "Irã",
+    "Iraq": "Iraque",
+    "Ivory Coast": "Costa do Marfim",
+    "Japan": "Japão",
+    "Jordan": "Jordânia",
+    "Mexico": "México",
+    "Morocco": "Marrocos",
+    "Netherlands": "Países Baixos",
+    "New Zealand": "Nova Zelândia",
+    "Norway": "Noruega",
+    "Panama": "Panamá",
+    "Paraguay": "Paraguai",
+    "Portugal": "Portugal",
+    "Qatar": "Catar",
+    "Saudi Arabia": "Arábia Saudita",
+    "Scotland": "Escócia",
+    "Senegal": "Senegal",
+    "South Africa": "África do Sul",
+    "South Korea": "Coreia do Sul",
+    "Spain": "Espanha",
+    "Sweden": "Suécia",
+    "Switzerland": "Suíça",
+    "Tunisia": "Tunísia",
+    "Turkey": "Turquia",
+    "United States": "Estados Unidos",
+    "Uruguay": "Uruguai",
+    "Uzbekistan": "Uzbequistão",
+}
+
+
+def _team_pt(name: str) -> str:
+    """Nome da seleção em português (fallback: o próprio nome se não estiver no mapa)."""
+    return _TEAM_NAME_PT.get(name, name)
+
+
+def _fetch_wc_matches(token: str, status: str | None = None) -> list[dict]:
+    """Busca jogos da Copa do Mundo na football-data.org (opcionalmente filtrando por status)."""
+    import httpx  # import local para não pesar no bundle serverless
+
+    params = {"status": status} if status else {}
+    resp = httpx.get(
+        "https://api.football-data.org/v4/competitions/WC/matches",
+        params=params,
+        headers={"X-Auth-Token": token},
+        timeout=30,
+    )
+    resp.raise_for_status()
+    return resp.json().get("matches", [])
+
+
+def sync_fixtures_from_api(db: Session, token: str) -> int:
+    """Preenche os confrontos do mata-mata a partir dos jogos já definidos na football-data.org.
+
+    Retorna quantos placeholders ("A definir") foram preenchidos.
+    Casa por (fase, ordem cronológica): para cada fase, os placeholders locais e os jogos
+    da API com os dois times definidos são ordenados por horário e emparelhados na ordem —
+    mantendo o alinhamento com `bracket_pos` (que no seed segue a ordem cronológica).
+    Só toca em placeholders (teams_decided=False / "A definir"); jogos já preenchidos à mão
+    pelo admin nunca são sobrescritos. Idempotente.
+    """
+    api_matches = _fetch_wc_matches(token)
+
+    # Jogos da API com os dois times definidos, agrupados pela nossa nomenclatura de fase.
+    api_by_stage: dict[str, list[dict]] = {}
+    for m in api_matches:
+        stage = _STAGE_MAP_API.get(m.get("stage", ""))
+        if stage is None or stage == "grupos":
+            continue
+        home = (m.get("homeTeam") or {}).get("name")
+        away = (m.get("awayTeam") or {}).get("name")
+        if not home or not away:
+            continue
+        api_by_stage.setdefault(stage, []).append(m)
+
+    count = 0
+    for stage, matches in api_by_stage.items():
+        placeholders = list(
+            db.scalars(
+                select(Match)
+                .where(
+                    Match.stage == stage,
+                    Match.teams_decided == False,  # noqa: E712
+                    Match.home_team == "A definir",
+                )
+                .order_by(Match.kickoff_at)
+            )
+        )
+        if not placeholders:
+            continue
+
+        matches_sorted = sorted(matches, key=lambda m: m["utcDate"])
+        for local, api in zip(placeholders, matches_sorted):
+            home = _team_pt(api["homeTeam"]["name"])
+            away = _team_pt(api["awayTeam"]["name"])
+            local.home_team = home
+            local.away_team = away
+            local.teams_decided = True
+            local.is_brazil = "brasil" in (home + away).casefold()
+            local.kickoff_at = datetime.fromisoformat(api["utcDate"].replace("Z", "+00:00"))
+            count += 1
+
+    db.commit()
+    return count
+
 
 def sync_results_from_api(db: Session, token: str) -> int:
     """Busca resultados finalizados na football-data.org e atualiza o banco.
@@ -285,18 +413,8 @@ def sync_results_from_api(db: Session, token: str) -> int:
     Não re-processa jogos já marcados como finished.
     Correspondência por (stage, kickoff_at) com tolerância de ±5 minutos.
     """
-    import httpx  # import local para não pesar no bundle serverless
-
-    resp = httpx.get(
-        "https://api.football-data.org/v4/competitions/WC/matches",
-        params={"status": "FINISHED"},
-        headers={"X-Auth-Token": token},
-        timeout=30,
-    )
-    resp.raise_for_status()
-
     count = 0
-    for m in resp.json().get("matches", []):
+    for m in _fetch_wc_matches(token, status="FINISHED"):
         stage = _STAGE_MAP_API.get(m.get("stage", ""))
         if not stage:
             continue

@@ -9,7 +9,12 @@ from sqlalchemy import create_engine, select, func
 from sqlalchemy.orm import Session
 
 from app.models import Base, Match
-from app.services import seed_missing_matches, sync_fixtures, sync_results_from_api
+from app.services import (
+    seed_missing_matches,
+    sync_fixtures,
+    sync_fixtures_from_api,
+    sync_results_from_api,
+)
 
 
 @pytest.fixture()
@@ -196,6 +201,117 @@ class TestSyncResultsFromApi:
         assert m.who_advanced == "home"
         assert m.home_score == 1
         assert m.away_score == 1
+
+
+# --------------------------------------------------------------------------- #
+# sync_fixtures_from_api (preenche confrontos do mata-mata)                     #
+# --------------------------------------------------------------------------- #
+# A API devolve nomes em inglês; a sync deve traduzir para o português do app.
+FAKE_QUARTAS_API = {
+    "matches": [
+        {
+            "stage": "QUARTER_FINALS",
+            "utcDate": "2026-07-10T19:00:00Z",
+            "status": "SCHEDULED",
+            "homeTeam": {"name": "Brazil"},
+            "awayTeam": {"name": "Argentina"},
+        },
+        {
+            "stage": "QUARTER_FINALS",
+            "utcDate": "2026-07-11T19:00:00Z",
+            "status": "SCHEDULED",
+            "homeTeam": {"name": "France"},
+            "awayTeam": {"name": "Spain"},
+        },
+    ]
+}
+
+
+def _placeholder(stage: str, kickoff: str, bracket_pos: int) -> Match:
+    m = _match(stage, kickoff)
+    m.bracket_pos = bracket_pos
+    return m
+
+
+class TestSyncFixturesFromApi:
+    def test_preenche_placeholders_por_ordem(self, db, respx_mock):
+        respx_mock.get("https://api.football-data.org/v4/competitions/WC/matches").mock(
+            return_value=httpx.Response(200, json=FAKE_QUARTAS_API)
+        )
+        # Placeholders com horário "chutado" diferente do real da API.
+        db.add(_placeholder("quartas", "2026-07-10T12:00:00+00:00", 1))
+        db.add(_placeholder("quartas", "2026-07-11T12:00:00+00:00", 2))
+        db.commit()
+
+        count = sync_fixtures_from_api(db, token="fake-token")
+
+        assert count == 2
+        q1 = db.scalar(select(Match).where(Match.bracket_pos == 1, Match.stage == "quartas"))
+        q2 = db.scalar(select(Match).where(Match.bracket_pos == 2, Match.stage == "quartas"))
+        assert (q1.home_team, q1.away_team) == ("Brasil", "Argentina")
+        assert q1.teams_decided is True
+        assert q1.is_brazil is True  # detecta Brasil
+        # SQLite devolve datetime ingênuo; o valor real é o horário da API (não o "chutado").
+        assert q1.kickoff_at.replace(tzinfo=timezone.utc) == datetime(2026, 7, 10, 19, 0, tzinfo=timezone.utc)
+        assert (q2.home_team, q2.away_team) == ("França", "Espanha")
+        assert q2.is_brazil is False
+
+    def test_ignora_jogos_sem_dois_times(self, db, respx_mock):
+        response = {
+            "matches": [
+                {
+                    "stage": "QUARTER_FINALS",
+                    "utcDate": "2026-07-10T19:00:00Z",
+                    "status": "SCHEDULED",
+                    "homeTeam": {"name": "Brasil"},
+                    "awayTeam": {"name": None},  # ainda não definido
+                }
+            ]
+        }
+        respx_mock.get("https://api.football-data.org/v4/competitions/WC/matches").mock(
+            return_value=httpx.Response(200, json=response)
+        )
+        db.add(_placeholder("quartas", "2026-07-10T12:00:00+00:00", 1))
+        db.commit()
+
+        count = sync_fixtures_from_api(db, token="fake-token")
+
+        assert count == 0
+        q1 = db.scalar(select(Match).where(Match.stage == "quartas"))
+        assert q1.home_team == "A definir"
+        assert q1.teams_decided is False
+
+    def test_nao_sobrescreve_jogo_preenchido_manualmente(self, db, respx_mock):
+        respx_mock.get("https://api.football-data.org/v4/competitions/WC/matches").mock(
+            return_value=httpx.Response(200, json=FAKE_QUARTAS_API)
+        )
+        # Admin já preencheu a primeira quarta à mão.
+        manual = _match("quartas", "2026-07-10T19:00:00+00:00", "Uruguai", "Portugal")
+        manual.teams_decided = True
+        manual.bracket_pos = 1
+        db.add(manual)
+        db.add(_placeholder("quartas", "2026-07-11T12:00:00+00:00", 2))
+        db.commit()
+
+        count = sync_fixtures_from_api(db, token="fake-token")
+
+        # Só o placeholder restante é preenchido; o manual fica intacto.
+        assert count == 1
+        db.refresh(manual)
+        assert (manual.home_team, manual.away_team) == ("Uruguai", "Portugal")
+
+    def test_idempotente(self, db, respx_mock):
+        respx_mock.get("https://api.football-data.org/v4/competitions/WC/matches").mock(
+            return_value=httpx.Response(200, json=FAKE_QUARTAS_API)
+        )
+        db.add(_placeholder("quartas", "2026-07-10T12:00:00+00:00", 1))
+        db.add(_placeholder("quartas", "2026-07-11T12:00:00+00:00", 2))
+        db.commit()
+
+        sync_fixtures_from_api(db, token="fake-token")
+        count2 = sync_fixtures_from_api(db, token="fake-token")
+
+        assert count2 == 0
 
 
 # --------------------------------------------------------------------------- #
