@@ -68,7 +68,8 @@ pytest
 2. Em <https://vercel.com> → **Add New Project** → importe o repositório.
 3. Em **Settings → Environment Variables**, configure: `DATABASE_URL`,
    `SESSION_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAILS`,
-   `BASE_URL` (ex.: `https://SEU-PROJETO.vercel.app`).
+   `BASE_URL` (ex.: `https://SEU-PROJETO.vercel.app`) e `FOOTBALL_DATA_TOKEN`
+   (token grátis da football-data.org, opcional — só para a sincronização automática).
 4. Deploy. A cada `git push` a Vercel publica de novo.
 
 > Gere um `SESSION_SECRET`:
@@ -80,8 +81,11 @@ pytest
   da 3ª rodada + esqueleto do mata-mata) e rode `python scripts/seed.py`, ou clique
   em **Importar tabela** na área de Admin.
 - **Via API (opcional, modelo misto):** veja [`scripts/import_fixtures.py`](scripts/import_fixtures.py)
-  para puxar a tabela da football-data.org uma vez. Os **placares** são sempre
-  lançados manualmente no Admin.
+  para puxar a tabela da football-data.org uma vez.
+- **Sincronização automática (Admin):** com `FOOTBALL_DATA_TOKEN` configurado, o botão
+  **Admin → Sincronizar da API** preenche os confrontos do mata-mata assim que ficam
+  definidos (quartas, semi, final) **e** puxa os placares finalizados, recalculando os
+  pontos. Confrontos preenchidos à mão no Admin nunca são sobrescritos.
 
 Formato de cada jogo em `fixtures.json`:
 

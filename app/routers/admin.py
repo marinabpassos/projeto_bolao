@@ -1,17 +1,24 @@
 """Área de administração: importar jogos, definir confrontos, lançar resultados e gabaritos."""
 
-import os
-
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.auth import require_admin
+from app.config import get_settings
 from app.db import get_db
 from app.models import Match, Settlement, User
 from app.phases import PHASES_PROGRESS
-from app.services import recompute_match, recompute_specials, seed_matches, seed_missing_matches, sync_fixtures, sync_results_from_api
+from app.services import (
+    recompute_match,
+    recompute_specials,
+    seed_matches,
+    seed_missing_matches,
+    sync_fixtures,
+    sync_fixtures_from_api,
+    sync_results_from_api,
+)
 from app.templating import templates
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -53,10 +60,11 @@ def run_sync_fixtures(user: User = Depends(require_admin), db: Session = Depends
 
 @router.post("/sync-resultados")
 def run_sync_resultados(user: User = Depends(require_admin), db: Session = Depends(get_db)):
-    token = os.environ.get("FOOTBALL_DATA_TOKEN", "")
+    token = get_settings().football_data_token
     if not token:
         raise HTTPException(status_code=500, detail="FOOTBALL_DATA_TOKEN não configurado.")
     try:
+        sync_fixtures_from_api(db, token)
         sync_results_from_api(db, token)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Erro na API: {exc}") from exc
