@@ -37,7 +37,7 @@
 
     {% if user and open %}
       {% if pred %}
-      <p class="text-center text-xs text-brand-green mt-2 mb-0.5">✓ Palpite salvo: <b>{{ pred.home_pred }} : {{ pred.away_pred }}</b>{% if m.stage != 'grupos' and pred and pred.qualifier_pred %} · avança: <b>{{ m.home_team if pred.qualifier_pred == 'home' else m.away_team }}</b>{% endif %} — editável até o apito</p>
+      <p class="text-center text-xs text-brand-green mt-2 mb-0.5">✓ Palpite salvo: <b>{{ pred.home_pred }} : {{ pred.away_pred }}</b>{% if m.stage != 'grupos' and pred and pred.qualifier_pred %} · {{ 'leva o 3º' if m.stage == 'terceiro' else 'avança' }}: <b>{{ m.home_team if pred.qualifier_pred == 'home' else m.away_team }}</b>{% endif %} — editável até o apito</p>
       {% endif %}
       <form method="post" action="/palpite/{{ m.id }}" class="flex flex-wrap items-center justify-center gap-2 mt-2">
         <div class="flex items-center justify-center gap-2 w-full">
@@ -53,7 +53,7 @@
         <div id="qualifier-{{ m.id }}"
              class="w-full mt-2"
              style="{{ '' if already_tied else 'display:none' }}">
-          <p class="text-xs text-slate-400 mb-1.5 text-center">Em caso de empate, quem avança? <span class="font-medium text-brand-green">+5 pts</span></p>
+          <p class="text-xs text-slate-400 mb-1.5 text-center">Em caso de empate, {{ 'quem fica com o 3º lugar?' if m.stage == 'terceiro' else 'quem avança?' }} <span class="font-medium text-brand-green">+5 pts</span></p>
           <div class="flex justify-center gap-6 text-sm">
             <label class="flex items-center gap-1.5 cursor-pointer">
               <input type="radio" name="qualifier_pred" value="home"
@@ -98,7 +98,7 @@
       </form>
     {% elif pred %}
       <p class="text-center text-sm text-slate-500 mt-2">
-        Seu palpite: <b class="text-slate-700">{{ pred.home_pred }} : {{ pred.away_pred }}</b>{% if m.stage != 'grupos' and pred.qualifier_pred %} · avança: <b class="text-slate-700">{{ m.home_team if pred.qualifier_pred == 'home' else m.away_team }}</b>{% endif %}
+        Seu palpite: <b class="text-slate-700">{{ pred.home_pred }} : {{ pred.away_pred }}</b>{% if m.stage != 'grupos' and pred.qualifier_pred %} · {{ 'leva o 3º' if m.stage == 'terceiro' else 'avança' }}: <b class="text-slate-700">{{ m.home_team if pred.qualifier_pred == 'home' else m.away_team }}</b>{% endif %}
         {% if m.finished %}· <span class="font-semibold text-brand-green">{{ pred.points }} pts</span>{% endif %}
       </p>
     {% elif not user %}
