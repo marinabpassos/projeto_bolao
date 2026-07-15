@@ -67,10 +67,16 @@ def _norm(name) -> str:
 
 
 def artilheiro_points(player_guess, tier_points_at_edit: int, top_scorer) -> int:
-    """Pontos da aposta de artilheiro: a faixa congelada se acertou, senão 0."""
-    if not _norm(player_guess) or not _norm(top_scorer):
+    """Pontos da aposta de artilheiro: a faixa congelada se acertou, senão 0.
+
+    O gabarito aceita mais de um nome separado por vírgula (artilharia
+    empatada); acertar qualquer um deles vale a faixa cheia.
+    """
+    guess = _norm(player_guess)
+    scorers = {_norm(n) for n in (top_scorer or "").split(",") if _norm(n)}
+    if not guess or not scorers:
         return 0
-    return tier_points_at_edit if _norm(player_guess) == _norm(top_scorer) else 0
+    return tier_points_at_edit if guess in scorers else 0
 
 
 def brazil_yesno_points(guess_in: bool, actual_in) -> int:

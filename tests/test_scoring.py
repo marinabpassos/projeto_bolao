@@ -86,6 +86,19 @@ class TestArtilheiroPoints:
         assert artilheiro_points("Mbappé", 60, "") == 0
         assert artilheiro_points(None, 60, "Mbappé") == 0
 
+    def test_gabarito_com_empate_todos_levam_pontos_cheios(self):
+        assert artilheiro_points("Mbappé", 60, "Mbappé, Haaland") == 60
+        assert artilheiro_points("Haaland", 40, "Mbappé, Haaland") == 40
+
+    def test_gabarito_com_empate_ignora_caixa_e_espacos(self):
+        assert artilheiro_points(" haaland ", 30, " Mbappé ,HAALAND ") == 30
+
+    def test_fora_da_lista_empatada_recebe_zero(self):
+        assert artilheiro_points("Messi", 60, "Mbappé, Haaland") == 0
+
+    def test_gabarito_so_com_virgulas_recebe_zero(self):
+        assert artilheiro_points("Mbappé", 60, ", ,") == 0
+
 
 # ---------------------------------------------------------------------------
 # Perguntas sim/não dos jogos do Brasil (Neymar/Endrick) — 3 pts cada
