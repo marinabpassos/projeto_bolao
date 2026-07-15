@@ -6,7 +6,7 @@ lógica de pontuação possa ser testada sem nenhuma dependência externa.
 
 # Fases dos JOGOS (usadas em matches.stage e nas faixas do artilheiro).
 # A Copa de 2026 tem 48 seleções: o mata-mata começa nos 16-avos.
-MATCH_STAGES = ["grupos", "16avos", "oitavas", "quartas", "semi", "final"]
+MATCH_STAGES = ["grupos", "16avos", "oitavas", "quartas", "semi", "terceiro", "final"]
 
 # Faixa de pontos do artilheiro conforme a fase do ÚLTIMO palpite.
 # Quanto mais cedo (mais jogos restando), mais vale.
@@ -16,6 +16,7 @@ ARTILHEIRO_TIERS = {
     "oitavas": 40,
     "quartas": 30,
     "semi": 20,
+    "terceiro": 10,  # mesma faixa da final: a essa altura restam só 2 jogos
     "final": 10,
 }
 

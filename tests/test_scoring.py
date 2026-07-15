@@ -59,6 +59,14 @@ class TestTierForPhase:
         with pytest.raises(KeyError):
             tier_for_phase("inexistente")
 
+    def test_faixa_do_terceiro_lugar_igual_a_final(self):
+        assert tier_for_phase("terceiro") == 10
+
+    def test_toda_fase_de_jogo_tem_faixa(self):
+        from app.phases import ARTILHEIRO_TIERS, MATCH_STAGES
+
+        assert set(MATCH_STAGES) == set(ARTILHEIRO_TIERS)
+
 
 class TestArtilheiroPoints:
     def test_acertou_recebe_valor_congelado(self):
