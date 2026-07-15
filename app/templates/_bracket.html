@@ -141,7 +141,8 @@
       <span class="flex-1 text-left truncate">{{ m.away_team }}{% if m.is_brazil and m.away_team == 'Brasil' %} <span class="text-brand-yellow">★</span>{% endif %}</span>
     </div>
     <p class="text-[11px] mt-2 text-center {{ 'text-brand-green' if my_preds.get(m.id) else 'text-slate-400' }}">
-      {% if m.finished and m.who_advanced %}→ {{ m.home_team if m.who_advanced == 'home' else m.away_team }} {{ 'ficou em 3º 🥉' if m.stage == 'terceiro' else 'é campeão! 🏆' }}
+      {% set adv = m.who_advanced or (m.finished and m.home_score != m.away_score and ('home' if m.home_score > m.away_score else 'away')) or '' %}
+      {% if m.finished and adv %}→ {{ m.home_team if adv == 'home' else m.away_team }} {{ 'ficou em 3º 🥉' if m.stage == 'terceiro' else 'é campeão! 🏆' }}
       {% elif my_preds.get(m.id) %}✓ seu palpite: {{ my_preds[m.id].home_pred }}:{{ my_preds[m.id].away_pred }} · toque para editar
       {% elif is_open[m.id] %}● aberto · toque para palpitar
       {% else %}fechado{% endif %}

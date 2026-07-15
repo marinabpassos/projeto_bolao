@@ -95,6 +95,81 @@ class TestSeedMissingMatches:
         assert count2 == 0
         assert db.scalar(select(func.count()).select_from(Match)) == 3
 
+    def test_nao_duplica_mata_mata_quando_api_reescreveu_kickoff(self, db, monkeypatch):
+        # sync_fixtures_from_api reescreve o kickoff_at do placeholder com o horário
+        # real da API. O fixture ainda tem o horário "chutado" original, mas o
+        # (stage, bracket_pos) já existe no banco — não deve reinserir.
+        fixtures = [
+            {
+                "stage": "quartas",
+                "round": None,
+                "home_team": "A definir",
+                "away_team": "A definir",
+                "teams_decided": False,
+                "is_brazil": False,
+                "kickoff_at": "2026-07-10T12:00:00+00:00",  # horário chutado
+                "bracket_pos": 1,
+            }
+        ]
+        monkeypatch.setattr("app.services.load_fixtures", lambda: fixtures)
+        m = _match("quartas", "2026-07-10T19:00:00+00:00", "Brasil", "Argentina")  # horário real
+        m.teams_decided = True
+        m.bracket_pos = 1
+        db.add(m)
+        db.commit()
+
+        count = seed_missing_matches(db)
+
+        assert count == 0
+        total = db.scalar(select(func.count()).select_from(Match))
+        assert total == 1
+
+    def test_nao_duplica_terceiro_quando_api_reescreveu_kickoff(self, db, monkeypatch):
+        # O placeholder de "terceiro" não tem bracket_pos; o dedup precisa cair no
+        # fallback por contagem de jogos já existentes na fase.
+        fixtures = [
+            {
+                "stage": "terceiro",
+                "round": None,
+                "home_team": "A definir",
+                "away_team": "A definir",
+                "teams_decided": False,
+                "is_brazil": False,
+                "kickoff_at": "2026-07-14T12:00:00+00:00",  # horário chutado
+            }
+        ]
+        monkeypatch.setattr("app.services.load_fixtures", lambda: fixtures)
+        m = _match("terceiro", "2026-07-14T19:00:00+00:00", "Brasil", "Argentina")  # horário real
+        m.teams_decided = True
+        db.add(m)
+        db.commit()
+
+        count = seed_missing_matches(db)
+
+        assert count == 0
+        total = db.scalar(select(func.count()).select_from(Match))
+        assert total == 1
+
+    def test_insere_terceiro_quando_banco_nao_tem_nenhum(self, db, monkeypatch):
+        fixtures = [
+            {
+                "stage": "terceiro",
+                "round": None,
+                "home_team": "A definir",
+                "away_team": "A definir",
+                "teams_decided": False,
+                "is_brazil": False,
+                "kickoff_at": "2026-07-14T12:00:00+00:00",
+            }
+        ]
+        monkeypatch.setattr("app.services.load_fixtures", lambda: fixtures)
+
+        count = seed_missing_matches(db)
+
+        assert count == 1
+        total = db.scalar(select(func.count()).select_from(Match))
+        assert total == 1
+
 
 FAKE_API_RESPONSE = {
     "matches": [
