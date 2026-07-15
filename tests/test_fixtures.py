@@ -25,3 +25,18 @@ def test_posicoes_unicas_e_dentro_da_faixa():
     for stage, slots in BRACKET_SLOTS.items():
         posicoes = sorted(f["bracket_pos"] for f in _knockout() if f["stage"] == stage)
         assert posicoes == list(range(1, slots + 1)), stage
+
+
+def test_terceiro_lugar_presente_e_fora_da_chave():
+    terceiros = [f for f in FIXTURES if f["stage"] == "terceiro"]
+    assert len(terceiros) == 1
+    assert terceiros[0]["teams_decided"] is False
+    assert terceiros[0]["bracket_pos"] is None
+
+
+def test_stage_map_da_api_cobre_o_terceiro_lugar():
+    from app.phases import MATCH_STAGES
+    from app.services import _STAGE_MAP_API
+
+    assert _STAGE_MAP_API["THIRD_PLACE"] == "terceiro"
+    assert set(_STAGE_MAP_API.values()) <= set(MATCH_STAGES)

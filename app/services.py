@@ -274,6 +274,7 @@ _STAGE_MAP_API = {
     "LAST_16": "oitavas",
     "QUARTER_FINALS": "quartas",
     "SEMI_FINALS": "semi",
+    "THIRD_PLACE": "terceiro",
     "FINAL": "final",
 }
 

@@ -98,7 +98,7 @@ Formato de cada jogo em `fixtures.json`:
 
 ```json
 {
-  "stage": "grupos",          // grupos|16avos|oitavas|quartas|semi|final
+  "stage": "grupos",          // grupos|16avos|oitavas|quartas|semi|terceiro|final
   "round": 3,                  // 1-3 nos grupos; null no mata-mata
   "home_team": "Brasil",
   "away_team": "Camarões",
