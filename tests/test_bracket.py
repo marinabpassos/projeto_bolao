@@ -7,6 +7,7 @@ from app.bracket import (
     current_stage,
     jogos_view,
     next_slot,
+    podium,
     side_of,
     slot_label,
 )
@@ -33,6 +34,12 @@ def _chave_completa(oitavas_finished=False):
     ms += [_m("semi", p, decided=False) for p in range(1, 3)]
     ms += [_m("final", 1, decided=False)]
     return ms
+
+
+def _finished(stage, home, away, hs, as_, adv=None, pos=None):
+    m = _m(stage, pos, finished=True, home=home, away=away)
+    m.home_score, m.away_score, m.who_advanced = hs, as_, adv
+    return m
 
 
 # ---- estrutura da árvore ---------------------------------------------------
@@ -121,13 +128,54 @@ def test_jogos_view_past_stages():
     assert view["past_stages"] == ["grupos", "16avos"]
 
 
-def test_jogos_view_na_final_sem_lados():
+def test_jogos_view_na_final_mostra_final_e_terceiro():
     ms = _chave_completa(oitavas_finished=True)
     for m in ms:
         if m.stage != "final":
             m.finished = True
         m.teams_decided = True
+    ms.append(_m("terceiro"))
     view = jogos_view(ms, None)
     assert view["selected_stage"] == "final"
-    assert view["pairs_b"] == []
-    assert view["pairs_a"][0]["target"] is None
+    assert view["view_mode"] == "bracket"
+    assert view["pairs_a"] == [] and view["pairs_b"] == []
+    assert view["final_match"] is not None
+    assert view["terceiro_match"].stage == "terceiro"
+    assert view["podium"] == {1: None, 2: None, 3: None, 4: None}
+    assert "terceiro" not in view["past_stages"]
+
+
+def test_jogos_view_fase_terceiro_cai_na_visao_final():
+    ms = _chave_completa() + [_m("terceiro")]
+    view = jogos_view(ms, "terceiro")
+    assert view["selected_stage"] == "final"
+
+
+def test_jogos_view_sem_jogo_de_terceiro_nao_quebra():
+    view = jogos_view(_chave_completa(), "final")
+    assert view["terceiro_match"] is None
+    assert view["final_match"] is not None
+
+
+# ---- podium ------------------------------------------------------------------
+def test_podium_vazio_sem_jogos_encerrados():
+    ms = [_m("final", 1, decided=False), _m("terceiro", decided=False)]
+    assert podium(ms) == {1: None, 2: None, 3: None, 4: None}
+
+
+def test_podium_so_terceiro_encerrado():
+    ms = [_m("final", 1), _finished("terceiro", "Brasil", "Inglaterra", 1, 1, adv="home")]
+    assert podium(ms) == {1: None, 2: None, 3: "Brasil", 4: "Inglaterra"}
+
+
+def test_podium_completo_sem_who_advanced_usa_placar():
+    ms = [
+        _finished("final", "França", "Argentina", 0, 2, pos=1),
+        _finished("terceiro", "Brasil", "Inglaterra", 3, 1),
+    ]
+    assert podium(ms) == {1: "Argentina", 2: "França", 3: "Brasil", 4: "Inglaterra"}
+
+
+def test_podium_empate_sem_who_advanced_fica_indefinido():
+    ms = [_finished("final", "França", "Argentina", 1, 1, pos=1)]
+    assert podium(ms) == {1: None, 2: None, 3: None, 4: None}
