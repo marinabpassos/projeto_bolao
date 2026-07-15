@@ -22,9 +22,9 @@
       <span class="text-[7px] text-slate-400">{{ stage[:3]|upper }}·A</span>
     </div>
     {% endfor %}
-    <div class="flex flex-col items-center flex-1">
+    <a href="/?fase=final" class="flex flex-col items-center flex-1">
       <span class="text-sm">🏆</span><span class="text-[7px] text-slate-400">FINAL</span>
-    </div>
+    </a>
     {% for stage in ['semi', 'quartas', 'oitavas'] %}
     <div class="flex flex-col gap-1 items-center flex-1">
       {% for pos in range(1, (view.bracket[stage]|length) + 1) if pos > (view.bracket[stage]|length) // 2 %}
@@ -120,8 +120,75 @@
 </div>
 {% endmacro %}
 
-{{ arvore(view.pairs_a, 'a') }}
-{% if view.pairs_b %}{{ arvore(view.pairs_b, 'b') }}{% endif %}
+{% macro jogo_final(m, titulo, dourado) %}
+{% set box = 'bg-gradient-to-br from-amber-50 via-white to-amber-50/60 border-amber-300 hover:border-amber-400' if dourado else 'bg-white border-slate-200 hover:border-slate-400' %}
+{% if m and m.teams_decided %}
+<div class="mb-3">
+  <button type="button" onclick="document.getElementById('card-{{ m.id }}').classList.toggle('hidden')"
+          class="w-full text-left rounded-2xl border-2 {{ box }} px-4 {{ 'py-4' if dourado else 'py-3' }} shadow-sm transition">
+    <p class="text-[10px] font-semibold uppercase tracking-wider {{ 'text-amber-600' if dourado else 'text-amber-800' }} mb-2 text-center">{{ titulo }} · {{ m.kickoff_at | dt_br }}</p>
+    <div class="flex items-center justify-center gap-3 {{ 'text-lg' if dourado else 'text-base' }} font-semibold text-slate-900">
+      <span class="flex-1 text-right truncate">{% if m.is_brazil and m.home_team == 'Brasil' %}<span class="text-brand-yellow">★</span> {% endif %}{{ m.home_team }}</span>
+      {% set url = flag_url(m.home_team) %}
+      {% if url %}<img src="{{ url }}" alt="" loading="lazy" class="{{ 'w-9' if dourado else 'w-7' }} h-auto rounded shadow">{% else %}<span class="{{ 'w-9 h-6' if dourado else 'w-7 h-5' }} bg-slate-200 rounded inline-block"></span>{% endif %}
+      {% if m.finished %}
+        <span class="px-2.5 py-1 rounded-md bg-slate-900 text-white text-sm tabular-nums">{{ m.home_score }} : {{ m.away_score }}</span>
+      {% else %}
+        <span class="text-slate-300 text-sm">vs</span>
+      {% endif %}
+      {% set url = flag_url(m.away_team) %}
+      {% if url %}<img src="{{ url }}" alt="" loading="lazy" class="{{ 'w-9' if dourado else 'w-7' }} h-auto rounded shadow">{% else %}<span class="{{ 'w-9 h-6' if dourado else 'w-7 h-5' }} bg-slate-200 rounded inline-block"></span>{% endif %}
+      <span class="flex-1 text-left truncate">{{ m.away_team }}{% if m.is_brazil and m.away_team == 'Brasil' %} <span class="text-brand-yellow">★</span>{% endif %}</span>
+    </div>
+    <p class="text-[11px] mt-2 text-center {{ 'text-brand-green' if my_preds.get(m.id) else 'text-slate-400' }}">
+      {% if m.finished and m.who_advanced %}→ {{ m.home_team if m.who_advanced == 'home' else m.away_team }} {{ 'ficou em 3º 🥉' if m.stage == 'terceiro' else 'é campeão! 🏆' }}
+      {% elif my_preds.get(m.id) %}✓ seu palpite: {{ my_preds[m.id].home_pred }}:{{ my_preds[m.id].away_pred }} · toque para editar
+      {% elif is_open[m.id] %}● aberto · toque para palpitar
+      {% else %}fechado{% endif %}
+    </p>
+  </button>
+  <div id="card-{{ m.id }}" class="mt-2 card-palpite{{ ' card-salvo' if saved == m.id|string or saved == 'brasil-' ~ m.id|string }}">
+    {{ cards.match_card(m, my_preds.get(m.id), my_br.get(m.id), user, is_open[m.id], saved) }}
+  </div>
+</div>
+{% elif m %}
+<div class="mb-3 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-100 px-4 py-4 text-center text-xs text-slate-400">
+  {{ titulo }} · ⏳ A definir · {{ m.kickoff_at | dt_br }}
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro degrau(pos, nome, cor, altura, texto='text-white') %}
+<div class="flex flex-col items-center justify-end gap-1 w-16">
+  {% if nome %}
+    {% set url = flag_url(nome) %}
+    {% if url %}<img src="{{ url }}" alt="" loading="lazy" class="w-6 h-auto rounded-[2px] shadow-sm">{% endif %}
+    <span class="text-[10px] text-slate-600 font-medium truncate max-w-full">{{ nome }}</span>
+  {% else %}
+    <span class="text-slate-300 text-sm">?</span>
+  {% endif %}
+  <div class="w-full {{ altura }} {{ cor }} rounded-t-md text-center text-[10px] font-bold {{ texto }} pt-0.5">{{ pos }}º</div>
+</div>
+{% endmacro %}
+
+{% if view.selected_stage == 'final' %}
+  {{ jogo_final(view.final_match, '🏆 Grande final', true) }}
+  {{ jogo_final(view.terceiro_match, '🥉 Disputa de 3º lugar', false) }}
+  {% if view.podium %}
+  <div class="bg-white rounded-xl border border-slate-200 p-4 mt-4">
+    <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-center mb-3">Pódio da Copa 2026</p>
+    <div class="flex items-end justify-center gap-2">
+      {{ degrau(2, view.podium[2], 'bg-slate-400', 'h-14') }}
+      {{ degrau(1, view.podium[1], 'bg-amber-400', 'h-20') }}
+      {{ degrau(3, view.podium[3], 'bg-amber-700', 'h-10') }}
+      {{ degrau(4, view.podium[4], 'bg-slate-200', 'h-6', 'text-slate-500') }}
+    </div>
+  </div>
+  {% endif %}
+{% else %}
+  {{ arvore(view.pairs_a, 'a') }}
+  {% if view.pairs_b %}{{ arvore(view.pairs_b, 'b') }}{% endif %}
+{% endif %}
 
 {# ---------- fases futuras compactas ---------- #}
 {% if view.future_rows %}
