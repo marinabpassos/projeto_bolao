@@ -52,6 +52,7 @@ STAGE_LABELS = {
     "oitavas": "Oitavas de final",
     "quartas": "Quartas de final",
     "semi": "Semifinal",
+    "terceiro": "Disputa de 3º lugar",
     "final": "Final",
 }
 templates.env.globals["stage_labels"] = STAGE_LABELS

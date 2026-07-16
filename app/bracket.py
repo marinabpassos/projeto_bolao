@@ -42,6 +42,37 @@ def current_stage(matches) -> str:
     return "final"
 
 
+def podium(matches) -> dict[int, str | None]:
+    """{1..4: seleção} a partir da final e do 3º lugar (None = ainda indefinido).
+
+    Usa who_advanced; sem ele (resultado manual), deriva do placar se não houve
+    empate nos 90 minutos.
+    """
+
+    def winner_loser(m):
+        if m is None or not m.finished:
+            return None, None
+        adv = m.who_advanced
+        if (
+            adv not in ("home", "away")
+            and m.home_score is not None
+            and m.away_score is not None
+            and m.home_score != m.away_score
+        ):
+            adv = "home" if m.home_score > m.away_score else "away"
+        if adv == "home":
+            return m.home_team, m.away_team
+        if adv == "away":
+            return m.away_team, m.home_team
+        return None, None
+
+    final = next((m for m in matches if m.stage == "final"), None)
+    terceiro = next((m for m in matches if m.stage == "terceiro"), None)
+    p1, p2 = winner_loser(final)
+    p3, p4 = winner_loser(terceiro)
+    return {1: p1, 2: p2, 3: p3, 4: p4}
+
+
 def build_bracket(matches):
     """{fase: {pos: Match | None}} para oitavas -> final.
 
@@ -79,6 +110,8 @@ def jogos_view(matches, fase_param: str | None) -> dict:
     """Contexto de exibição da página de jogos (modo lista ou bracket)."""
     atual = current_stage(matches)
     sel = fase_param if fase_param in MATCH_STAGES else atual
+    if sel == "terceiro":
+        sel = "final"  # o 3º lugar é exibido dentro da visão da final
     view = {
         "selected_stage": sel,
         "view_mode": "list",
@@ -87,6 +120,9 @@ def jogos_view(matches, fase_param: str | None) -> dict:
         "pairs_b": [],
         "future_rows": [],
         "past_stages": [],
+        "final_match": None,
+        "terceiro_match": None,
+        "podium": None,
     }
     if sel not in BRACKET_STAGES:
         return view
@@ -97,10 +133,14 @@ def jogos_view(matches, fase_param: str | None) -> dict:
     view["view_mode"] = "bracket"
     view["bracket"] = bracket
     view["past_stages"] = [
-        s for s in MATCH_STAGES[: MATCH_STAGES.index(sel)] if any(m.stage == s for m in matches)
+        s
+        for s in MATCH_STAGES[: MATCH_STAGES.index(sel)]
+        if s != "terceiro" and any(m.stage == s for m in matches)
     ]
     if sel == "final":
-        view["pairs_a"] = [{"games": [(1, bracket["final"][1])], "target": None}]
+        view["final_match"] = bracket["final"][1]
+        view["terceiro_match"] = next((m for m in matches if m.stage == "terceiro"), None)
+        view["podium"] = podium(matches)
     else:
         view["pairs_a"] = _pairs(bracket, sel, "A")
         view["pairs_b"] = _pairs(bracket, sel, "B")

@@ -57,5 +57,6 @@
   { "stage": "quartas", "round": null, "home_team": "A definir", "away_team": "A definir", "teams_decided": false, "is_brazil": false, "kickoff_at": "2026-07-11T23:00:00+00:00", "bracket_pos": 4 },
   { "stage": "semi", "round": null, "home_team": "A definir", "away_team": "A definir", "teams_decided": false, "is_brazil": false, "kickoff_at": "2026-07-14T19:00:00+00:00", "bracket_pos": 1 },
   { "stage": "semi", "round": null, "home_team": "A definir", "away_team": "A definir", "teams_decided": false, "is_brazil": false, "kickoff_at": "2026-07-15T19:00:00+00:00", "bracket_pos": 2 },
+  { "stage": "terceiro", "round": null, "home_team": "A definir", "away_team": "A definir", "teams_decided": false, "is_brazil": false, "kickoff_at": "2026-07-18T18:00:00+00:00", "bracket_pos": null },
   { "stage": "final", "round": null, "home_team": "A definir", "away_team": "A definir", "teams_decided": false, "is_brazil": false, "kickoff_at": "2026-07-19T19:00:00+00:00", "bracket_pos": 1 }
 ]

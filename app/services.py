@@ -1,5 +1,6 @@
 """Regras de negócio compartilhadas: abertura de palpites, recálculo e ranking."""
 
+from collections import Counter
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import func, select
@@ -47,18 +48,42 @@ def seed_matches(db: Session) -> int:
 
 
 def seed_missing_matches(db: Session) -> int:
-    """Insere jogos de fixtures.json ainda ausentes no banco (dedup por stage + kickoff_at)."""
+    """Insere jogos de fixtures.json ainda ausentes no banco.
+
+    Dedup por (stage, kickoff_at) — mas isso não basta: sync_fixtures_from_api
+    reescreve o kickoff_at de um placeholder com o horário real da API, então o
+    kickoff "chutado" do fixtures.json não bate mais com o do banco. Para não
+    reinserir um placeholder "A definir" duplicado nesse caso, também dedup por
+    (stage, bracket_pos) quando o fixture tem bracket_pos, e por contagem de
+    jogos já existentes na fase quando não tem (caso do "terceiro").
+    """
     existing: set[tuple[str, datetime]] = set()
+    existing_pos: set[tuple[str, int]] = set()
+    stage_counts: Counter[str] = Counter()
     for m in db.scalars(select(Match)):
         kt = m.kickoff_at if m.kickoff_at.tzinfo else m.kickoff_at.replace(tzinfo=timezone.utc)
         existing.add((m.stage, kt))
+        if m.bracket_pos is not None:
+            existing_pos.add((m.stage, m.bracket_pos))
+        stage_counts[m.stage] += 1
+
+    fixtures = load_fixtures()
+    fixture_stage_counts = Counter(f["stage"] for f in fixtures)
 
     count = 0
-    for f in load_fixtures():
+    for f in fixtures:
         kt = datetime.fromisoformat(f["kickoff_at"])
         if kt.tzinfo is None:
             kt = kt.replace(tzinfo=timezone.utc)
         if (f["stage"], kt) in existing:
+            continue
+        if f.get("bracket_pos") is not None and (f["stage"], f["bracket_pos"]) in existing_pos:
+            continue
+        if (
+            f.get("bracket_pos") is None
+            and f["stage"] != "grupos"
+            and stage_counts[f["stage"]] >= fixture_stage_counts[f["stage"]]
+        ):
             continue
         db.add(
             Match(
@@ -274,6 +299,7 @@ _STAGE_MAP_API = {
     "LAST_16": "oitavas",
     "QUARTER_FINALS": "quartas",
     "SEMI_FINALS": "semi",
+    "THIRD_PLACE": "terceiro",
     "FINAL": "final",
 }
 

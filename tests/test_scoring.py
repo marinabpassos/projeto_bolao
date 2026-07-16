@@ -59,6 +59,14 @@ class TestTierForPhase:
         with pytest.raises(KeyError):
             tier_for_phase("inexistente")
 
+    def test_faixa_do_terceiro_lugar_igual_a_final(self):
+        assert tier_for_phase("terceiro") == 10
+
+    def test_toda_fase_de_jogo_tem_faixa(self):
+        from app.phases import ARTILHEIRO_TIERS, MATCH_STAGES
+
+        assert set(MATCH_STAGES) == set(ARTILHEIRO_TIERS)
+
 
 class TestArtilheiroPoints:
     def test_acertou_recebe_valor_congelado(self):
@@ -77,6 +85,19 @@ class TestArtilheiroPoints:
         assert artilheiro_points("", 60, "Mbappé") == 0
         assert artilheiro_points("Mbappé", 60, "") == 0
         assert artilheiro_points(None, 60, "Mbappé") == 0
+
+    def test_gabarito_com_empate_todos_levam_pontos_cheios(self):
+        assert artilheiro_points("Mbappé", 60, "Mbappé, Haaland") == 60
+        assert artilheiro_points("Haaland", 40, "Mbappé, Haaland") == 40
+
+    def test_gabarito_com_empate_ignora_caixa_e_espacos(self):
+        assert artilheiro_points(" haaland ", 30, " Mbappé ,HAALAND ") == 30
+
+    def test_fora_da_lista_empatada_recebe_zero(self):
+        assert artilheiro_points("Messi", 60, "Mbappé, Haaland") == 0
+
+    def test_gabarito_so_com_virgulas_recebe_zero(self):
+        assert artilheiro_points("Mbappé", 60, ", ,") == 0
 
 
 # ---------------------------------------------------------------------------

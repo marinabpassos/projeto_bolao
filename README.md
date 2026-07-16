@@ -70,7 +70,14 @@ pytest
    `SESSION_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAILS`,
    `BASE_URL` (ex.: `https://SEU-PROJETO.vercel.app`) e `FOOTBALL_DATA_TOKEN`
    (token grátis da football-data.org, opcional — só para a sincronização automática).
-4. Deploy. A cada `git push` a Vercel publica de novo.
+4. **Publicar:** hoje o deploy é **manual**, pela CLI, a partir da `main`:
+   ```bash
+   npm i -g vercel      # uma vez
+   vercel --prod        # publica a versão atual em produção
+   ```
+   > Para publicar automaticamente a cada `git push`, conecte o repositório em
+   > **Project → Settings → Git → Connect Git Repository** — enquanto não estiver
+   > conectado, o push no GitHub **não** dispara deploy.
 
 > Gere um `SESSION_SECRET`:
 > `python -c "import secrets; print(secrets.token_hex(32))"`
@@ -91,7 +98,7 @@ Formato de cada jogo em `fixtures.json`:
 
 ```json
 {
-  "stage": "grupos",          // grupos|16avos|oitavas|quartas|semi|final
+  "stage": "grupos",          // grupos|16avos|oitavas|quartas|semi|terceiro|final
   "round": 3,                  // 1-3 nos grupos; null no mata-mata
   "home_team": "Brasil",
   "away_team": "Camarões",
